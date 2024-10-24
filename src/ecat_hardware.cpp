@@ -6,11 +6,12 @@
 
 #include <unordered_map>
 #include <signal.h>
+#include <iostream>
 
 constexpr auto SLAVE_START_POSITION = 0;
 constexpr auto SLAVE_ALIAS = 0;
-constexpr auto SLAVE_VENDOR_ID = 0x000022d2;
-constexpr auto SLAVE_PRODUCT_ID = 0x00000201;
+constexpr auto SLAVE_VENDOR_ID = 0x000000fb;
+constexpr auto SLAVE_PRODUCT_ID = 0x65520000;
 struct
 {
   uint control_word;
@@ -51,88 +52,69 @@ const ec_pdo_entry_reg_t lifterDomainRegistries[] = {
     {}};*/
 
 const ec_pdo_entry_reg_t domainRegistries[] = {
-  { SLAVE_START_POSITION, SLAVE_ALIAS, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6040, 0x00,
+  { SLAVE_ALIAS, SLAVE_START_POSITION, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6040, 0x00,
     &RightMotorEthercatDataOffsets.control_word },
-  { SLAVE_START_POSITION, SLAVE_ALIAS, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6060, 0x00,
+  { SLAVE_ALIAS, SLAVE_START_POSITION, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6060, 0x00,
     &RightMotorEthercatDataOffsets.operation_mode },
-  { SLAVE_START_POSITION, SLAVE_ALIAS, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x607a, 0x00,
+  { SLAVE_ALIAS, SLAVE_START_POSITION, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x607a, 0x00,
     &RightMotorEthercatDataOffsets.target_position },
-  { SLAVE_START_POSITION, SLAVE_ALIAS, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x60ff, 0x0,
+  { SLAVE_ALIAS, SLAVE_START_POSITION, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x60ff, 0x00,
     &RightMotorEthercatDataOffsets.target_velocity },
-  { SLAVE_START_POSITION, SLAVE_ALIAS, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6041, 0x0,
+  { SLAVE_ALIAS, SLAVE_START_POSITION, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6041, 0x00,
     &RightMotorEthercatDataOffsets.status_word },
-  { SLAVE_START_POSITION, SLAVE_ALIAS, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6064, 0x0,
+  { SLAVE_ALIAS, SLAVE_START_POSITION, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6064, 0x00,
     &RightMotorEthercatDataOffsets.current_position },
-  { SLAVE_START_POSITION, SLAVE_ALIAS, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x606C, 0x0,
+  { SLAVE_ALIAS, SLAVE_START_POSITION, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x606C, 0x00,
     &RightMotorEthercatDataOffsets.current_velocity },
-  { SLAVE_START_POSITION + 1, SLAVE_ALIAS, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6040, 0x00,
+  { SLAVE_ALIAS, SLAVE_START_POSITION + 1, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6040, 0x00,
     &LeftMotorEthercatDataOffsets.control_word },
-  { SLAVE_START_POSITION + 1, SLAVE_ALIAS, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6060, 0x00,
+  { SLAVE_ALIAS, SLAVE_START_POSITION + 1, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6060, 0x00,
     &LeftMotorEthercatDataOffsets.operation_mode },
-  { SLAVE_START_POSITION + 1, SLAVE_ALIAS, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x607a, 0x00,
+  { SLAVE_ALIAS, SLAVE_START_POSITION + 1, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x607a, 0x00,
     &LeftMotorEthercatDataOffsets.target_position },
-  { SLAVE_START_POSITION + 1, SLAVE_ALIAS, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x60ff, 0x0,
+  { SLAVE_ALIAS, SLAVE_START_POSITION + 1, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x60ff, 0x00,
     &LeftMotorEthercatDataOffsets.target_velocity },
-  { SLAVE_START_POSITION + 1, SLAVE_ALIAS, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6041, 0x0,
+  { SLAVE_ALIAS, SLAVE_START_POSITION + 1, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6041, 0x00,
     &LeftMotorEthercatDataOffsets.status_word },
-  { SLAVE_START_POSITION + 1, SLAVE_ALIAS, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6064, 0x0,
+  { SLAVE_ALIAS, SLAVE_START_POSITION + 1, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6064, 0x00,
     &LeftMotorEthercatDataOffsets.current_position },
-  { SLAVE_START_POSITION + 1, SLAVE_ALIAS, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x606C, 0x0,
+  { SLAVE_ALIAS, SLAVE_START_POSITION + 1, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x606C, 0x00,
     &LeftMotorEthercatDataOffsets.current_velocity },
   {}
 };
 
-const ec_pdo_entry_reg_t leftMotorDomainRegistries[] = {
-  { SLAVE_START_POSITION + 1, SLAVE_ALIAS, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6040, 0x00,
-    &LeftMotorEthercatDataOffsets.control_word },
-  { SLAVE_START_POSITION + 1, SLAVE_ALIAS, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6060, 0x00,
-    &LeftMotorEthercatDataOffsets.operation_mode },
-  { SLAVE_START_POSITION + 1, SLAVE_ALIAS, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x607a, 0x00,
-    &LeftMotorEthercatDataOffsets.target_position },
-  { SLAVE_START_POSITION + 1, SLAVE_ALIAS, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x60ff, 0x0,
-    &LeftMotorEthercatDataOffsets.target_velocity },
-  { SLAVE_START_POSITION + 1, SLAVE_ALIAS, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6041, 0x0,
-    &LeftMotorEthercatDataOffsets.status_word },
-  { SLAVE_START_POSITION + 1, SLAVE_ALIAS, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6064, 0x0,
-    &LeftMotorEthercatDataOffsets.current_position },
-  { SLAVE_START_POSITION + 1, SLAVE_ALIAS, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x606C, 0x0,
-    &LeftMotorEthercatDataOffsets.current_velocity },
-  {}
-};
 ec_pdo_entry_info_t right_motor_pdo_entries[] = { { 0x6040, 0x00, 16 },
                                                   { 0x6060, 0x00, 8 },
                                                   { 0x607a, 0x00, 32 },
                                                   { 0x60ff, 0x00, 32 },
-                                                  // Tx PDOs:
                                                   { 0x6041, 0x00, 16 },
                                                   { 0x6064, 0x00, 32 },
                                                   { 0x606c, 0x00, 32 } };
 
-ec_pdo_info_t right_motor_pdo_info[] = { { 0x1600, 4, right_motor_pdo_entries + 0 },
-                                         { 0x1A00, 3, right_motor_pdo_entries + 4 } };
+ec_pdo_info_t right_motor_pdo_info[] = { { 0x1603, 4, right_motor_pdo_entries + 0 },
+                                         { 0x1A03, 3, right_motor_pdo_entries + 4 } };
 
 ec_sync_info_t right_motor_slave_syncs[] = { { 0, EC_DIR_OUTPUT, 0, NULL, EC_WD_DISABLE },
                                              { 1, EC_DIR_INPUT, 0, NULL, EC_WD_DISABLE },
-                                             { 2, EC_DIR_OUTPUT, 0, right_motor_pdo_info + 0, EC_WD_ENABLE },
-                                             { 3, EC_DIR_INPUT, 0, right_motor_pdo_info + 1, EC_WD_DISABLE },
+                                             { 2, EC_DIR_OUTPUT, 1, right_motor_pdo_info + 0, EC_WD_ENABLE },
+                                             { 3, EC_DIR_INPUT, 1, right_motor_pdo_info + 1, EC_WD_DISABLE },
                                              { 0xff } };
 
 ec_pdo_entry_info_t left_motor_pdo_entries[] = { { 0x6040, 0x00, 16 },
                                                  { 0x6060, 0x00, 8 },
                                                  { 0x607a, 0x00, 32 },
                                                  { 0x60ff, 0x00, 32 },
-                                                 // Tx PDOs:
                                                  { 0x6041, 0x00, 16 },
                                                  { 0x6064, 0x00, 32 },
                                                  { 0x606c, 0x00, 32 } };
 
-ec_pdo_info_t left_motor_pdo_info[] = { { 0x1600, 4, left_motor_pdo_entries + 0 },
-                                        { 0x1A00, 3, left_motor_pdo_entries + 4 } };
+ec_pdo_info_t left_motor_pdo_info[] = { { 0x1603, 4, left_motor_pdo_entries + 0 },
+                                        { 0x1A03, 3, left_motor_pdo_entries + 4 } };
 
 ec_sync_info_t left_motor_slave_syncs[] = { { 0, EC_DIR_OUTPUT, 0, NULL, EC_WD_DISABLE },
                                             { 1, EC_DIR_INPUT, 0, NULL, EC_WD_DISABLE },
-                                            { 2, EC_DIR_OUTPUT, 0, left_motor_pdo_info + 0, EC_WD_ENABLE },
-                                            { 3, EC_DIR_INPUT, 0, left_motor_pdo_info + 1, EC_WD_DISABLE },
+                                            { 2, EC_DIR_OUTPUT, 1, left_motor_pdo_info + 0, EC_WD_ENABLE },
+                                            { 3, EC_DIR_INPUT, 1, left_motor_pdo_info + 1, EC_WD_DISABLE },
                                             { 0xff } };
 
 bool runHardwareLoop = true;
@@ -172,6 +154,7 @@ int main(int argc, char** argv)
   int configurePdosRes = ecrt_slave_config_pdos(slaveConfigPtr, EC_END, right_motor_slave_syncs);
   if (configurePdosRes != 0)
   {
+    std::cout << "Could not configure right motor driver PDOs." << std::endl;
     return 1;
   }
 
@@ -184,6 +167,7 @@ int main(int argc, char** argv)
   configurePdosRes = ecrt_slave_config_pdos(slaveConfigPtr, EC_END, left_motor_slave_syncs);
   if (configurePdosRes != 0)
   {
+    std::cout << "Could not configure left motor driver PDOs." << std::endl;
     return 1;
   }
 
@@ -191,6 +175,7 @@ int main(int argc, char** argv)
 
   if (registerDomainEntriesRes != 0)
   {
+    std::cout << "Could not register PDO list." << std::endl;
     return 1;
   }
 
@@ -200,8 +185,9 @@ int main(int argc, char** argv)
 
   SharedMemoryHandler shMemHandler;
 
-  if (!(shMemHandler.init() == ecat_sh_hardware::Error::NoError))
+  if (shMemHandler.init() != ecat_sh_hardware::Error::NoError)
   {
+    std::cout << "Could not initialize shared memory handler" << std::endl;
     return 1;
   }
 
@@ -210,11 +196,13 @@ int main(int argc, char** argv)
   int activateMasterRes = ecrt_master_activate(masterPtr);
   if (activateMasterRes != 0)
   {
+    std::cout << "Could not activate master" << std::endl;
     return 1;
   }
 
   if (!(domainProcessData = ecrt_domain_data(domainPtr)))
   {
+    std::cout << "Could not create domain data" << std::endl;
     return 1;
   }
 
@@ -231,10 +219,14 @@ int main(int argc, char** argv)
   auto periodNs = ecat_sh_hardware::NANOSEC_PER_SEC / 500;
   distributedClockHelper.cycleTime = { 0, periodNs };
   distributedClockHelper.referenceClockCounter = 0;
-
+/* 
   struct sched_param processParam = {};
   processParam.sched_priority = sched_get_priority_max(SCHED_FIFO);
-  if(sched_setscheduler(0, SCHED_FIFO, &processParam));
+  if(sched_setscheduler(0, SCHED_FIFO, &processParam) != 0)
+  {
+    std::cout << "Could not change process priority" << std::endl;
+    return 1;
+  } */
 
   while (runHardwareLoop)
   {
@@ -347,6 +339,8 @@ int main(int argc, char** argv)
     ecrt_domain_queue(domainPtr);
     ecrt_master_send(masterPtr);
   }
+
+  ecrt_release_master(masterPtr);
 
   return 0;
 }

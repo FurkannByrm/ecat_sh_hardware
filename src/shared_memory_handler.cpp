@@ -7,13 +7,15 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 
+#include <iostream>
+
 SharedMemoryHandler::SharedMemoryHandler() {}
 
 SharedMemoryHandler::~SharedMemoryHandler() {
 
-  sem_close(m_EcatDataSem.get());
   sem_unlink(shared_obj_info::ETHERCAT_DATA_SEM_NAME);
-
+  sem_close(m_EcatDataSem.get());
+  
   munmap(m_SharedObjectAddressPtr, m_SharedMemorySize);
   close(m_SharedMemoryFd);
   shm_unlink(shared_obj_info::SHARED_MEMORY_SEG_NAME);
@@ -21,15 +23,19 @@ SharedMemoryHandler::~SharedMemoryHandler() {
 
 ecat_sh_hardware::Error SharedMemoryHandler::init() {
 
+  m_SharedMemorySize = 2 * sizeof(shared_obj_info::EthercatDataObject);
+
   m_SharedMemoryFd = shm_open(shared_obj_info::SHARED_MEMORY_SEG_NAME,
                               O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
 
   if (m_SharedMemoryFd == -1) {
+    std::cout << "Could not open shared memory file descriptor." << std::endl;
     return ecat_sh_hardware::Error::shmOpenError;
   }
 
   int extentMemoryRes = ftruncate(m_SharedMemoryFd, m_SharedMemorySize);
   if (extentMemoryRes == -1) {
+    std::cout << "Could not truncate memory." << std::endl;
     return ecat_sh_hardware::Error::ftruncateError;
   }
 
@@ -37,12 +43,14 @@ ecat_sh_hardware::Error SharedMemoryHandler::init() {
       NULL, m_SharedMemorySize, PROT_READ | PROT_WRITE, MAP_SHARED,
       m_SharedMemoryFd, 0);
   if (m_SharedObjectAddressPtr == MAP_FAILED) {
+    std::cout << "Could not map memory" << std::endl;
     return ecat_sh_hardware::Error::mmapError;
   }
 
-  sem_t *semPtr = sem_open(shared_obj_info::ETHERCAT_DATA_SEM_NAME, O_CREAT);
+  sem_t *semPtr = sem_open(shared_obj_info::ETHERCAT_DATA_SEM_NAME, O_CREAT, S_IRUSR | S_IWUSR);
 
   if (semPtr == SEM_FAILED) {
+    std::cout << "Could not create semaphore" << std::endl;
     return ecat_sh_hardware::Error::semOpenError;
   }
 
