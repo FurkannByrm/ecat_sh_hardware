@@ -21,12 +21,24 @@ SharedMemoryHandler::~SharedMemoryHandler() {
   shm_unlink(shared_obj_info::SHARED_MEMORY_SEG_NAME);
 }
 
-ecat_sh_hardware::Error SharedMemoryHandler::init() {
+ecat_sh_hardware::Error SharedMemoryHandler::init(ShMode shmode) {
 
   m_SharedMemorySize = 2 * sizeof(shared_obj_info::EthercatDataObject);
 
+  int shmFlag = O_RDWR; 
+  int semFlag = 0;
+  if(shmode == ShMode::Creator)
+  {
+    shmFlag = shmFlag | O_CREAT | O_EXCL;
+    semFlag = O_CREAT | O_EXCL;
+  }
+  else if(shmode == ShMode::User)
+  {
+    shmFlag = shmFlag;
+  }
+
   m_SharedMemoryFd = shm_open(shared_obj_info::SHARED_MEMORY_SEG_NAME,
-                              O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+                              shmFlag, S_IRUSR | S_IWUSR);
 
   if (m_SharedMemoryFd == -1) {
     std::cout << "Could not open shared memory file descriptor." << std::endl;
@@ -47,7 +59,7 @@ ecat_sh_hardware::Error SharedMemoryHandler::init() {
     return ecat_sh_hardware::Error::mmapError;
   }
 
-  sem_t *semPtr = sem_open(shared_obj_info::ETHERCAT_DATA_SEM_NAME, O_CREAT, S_IRUSR | S_IWUSR);
+  sem_t *semPtr = sem_open(shared_obj_info::ETHERCAT_DATA_SEM_NAME, semFlag, S_IRUSR | S_IWUSR);
 
   if (semPtr == SEM_FAILED) {
     std::cout << "Could not create semaphore" << std::endl;

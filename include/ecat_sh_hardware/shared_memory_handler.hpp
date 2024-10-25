@@ -15,6 +15,12 @@
 #include <memory>
 #include <vector>
 
+enum class ShMode
+{
+  Creator,
+  User
+};
+
 class SharedMemoryHandler {
 
 public:
@@ -30,7 +36,7 @@ public:
 
   ~SharedMemoryHandler();
 
-  ecat_sh_hardware::Error init();
+  ecat_sh_hardware::Error init(ShMode shmode = ShMode::Creator);
 
   std::optional<std::vector<shared_obj_info::EthercatDataObject>> getEcDataObject();
 
