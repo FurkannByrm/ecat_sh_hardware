@@ -33,6 +33,20 @@ struct EthercatDataObject {
   {
 
   }
+
+  EthercatDataObject(EthercatDataObject const&) = default;
+  
+  EthercatDataObject& operator=(EthercatDataObject other)
+  {
+    this->control_word = other.control_word;
+    this->operation_mode = other.operation_mode;
+    this->target_position = other.target_position;
+    this->target_velocity = other.target_velocity;
+    this->status_word = other.status_word;
+    this->current_position = other.current_position;
+    this->current_velocity = other.current_velocity;
+    return *this;
+  }
 };
 
 } // namespace shared_obj_info
