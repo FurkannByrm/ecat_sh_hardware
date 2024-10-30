@@ -227,7 +227,9 @@ int main(int argc, char** argv)
     std::cout << "Could not change process priority" << std::endl;
     return 1;
   } */
-
+  timespec startTime;
+  timespec lastStartTime = startTime;
+  clock_gettime(CLOCK_MONOTONIC, &startTime);
   while (runHardwareLoop)
   {
     // DC sync
@@ -235,6 +237,13 @@ int main(int argc, char** argv)
         ecat_sh_hardware::addTimespec(distributedClockHelper.wakeupTime, distributedClockHelper.cycleTime);
     clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &distributedClockHelper.wakeupTime, NULL);
 
+    clock_gettime(CLOCK_MONOTONIC, &startTime);
+    timespec periodTs = {.tv_sec = startTime.tv_sec - lastStartTime.tv_sec, .tv_nsec = startTime.tv_nsec - lastStartTime.tv_nsec};
+    lastStartTime = startTime;
+
+    std::chrono::duration<double> periodAsSecs = timespecToChronoDuration<double, std::ratio<1>>(periodTs);
+
+    std::cout << "Period: " << periodAsSecs.count() << std::endl;
     ecrt_master_application_time(masterPtr, ecat_sh_hardware::timespecToNanoSec(distributedClockHelper.wakeupTime));
 
     ecrt_master_receive(masterPtr);
