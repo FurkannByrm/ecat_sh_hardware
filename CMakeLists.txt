@@ -27,6 +27,7 @@ add_executable(
   src/kinematics.cpp
 )
 target_include_directories(diff_drive_controller PUBLIC include/)
+target_link_libraries(diff_drive_controller rt Threads::Threads)
 
 
 install(

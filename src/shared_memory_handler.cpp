@@ -6,6 +6,8 @@
 #include <semaphore.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <string.h>
+#include <errno.h>
 
 #include <iostream>
 
@@ -29,8 +31,9 @@ ecat_sh_hardware::Error SharedMemoryHandler::init(ShMode shmode) {
   int semFlag = 0;
   if(shmode == ShMode::Creator)
   {
+    
     shmFlag = shmFlag | O_CREAT | O_EXCL;
-    semFlag = O_CREAT | O_EXCL;
+    semFlag = O_CREAT;
   }
   else if(shmode == ShMode::User)
   {
@@ -38,17 +41,20 @@ ecat_sh_hardware::Error SharedMemoryHandler::init(ShMode shmode) {
   }
 
   m_SharedMemoryFd = shm_open(shared_obj_info::SHARED_MEMORY_SEG_NAME,
-                              shmFlag, S_IRUSR | S_IWUSR);
+                              shmFlag, S_IRWXU);
 
   if (m_SharedMemoryFd == -1) {
-    std::cout << "Could not open shared memory file descriptor." << std::endl;
+    //std::cout << "Could not open shared memory file descriptor." << std::endl;
+    printf("%s\n", strerror(errno));
     return ecat_sh_hardware::Error::shmOpenError;
   }
-
+  
+  if(shmode == ShMode::Creator){
   int extentMemoryRes = ftruncate(m_SharedMemoryFd, m_SharedMemorySize);
   if (extentMemoryRes == -1) {
     std::cout << "Could not truncate memory." << std::endl;
     return ecat_sh_hardware::Error::ftruncateError;
+  }
   }
 
   m_SharedObjectAddressPtr = (shared_obj_info::EthercatDataObject *)mmap(

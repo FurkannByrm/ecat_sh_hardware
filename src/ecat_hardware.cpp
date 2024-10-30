@@ -248,6 +248,8 @@ int main(int argc, char** argv)
     if (rightMotorSW)
     {
       rightWheelData.status_word = rightMotorSW.value();
+      std::cout << "SW: " << rightMotorSW.value() << std::endl;
+      std::cout << "Written control word: " << readFromSlave<uint16_t>(domainProcessData, RightMotorEthercatDataOffsets.control_word).value() << std::endl;
     }
     auto rightMotorCurrentPosition =
         readFromSlave<int32_t>(domainProcessData, RightMotorEthercatDataOffsets.current_position);
@@ -283,6 +285,7 @@ int main(int argc, char** argv)
     // If we get a lock on the semaphore, read/write from/to EtherCAT:
     if (shMemHandler.tryLockSem() == 0)
     {
+      shMemHandler.sendEcDataObject({rightWheelData, leftWheelData});
       auto receivedDataObj = shMemHandler.getEcDataObject();
       if (receivedDataObj)
       {
@@ -297,6 +300,7 @@ int main(int argc, char** argv)
           objs[0].current_velocity = rightWheelData.current_velocity;
 
           rightWheelData.control_word = objs[0].control_word;
+          std::cout << "Received control word: " << rightWheelData.control_word << std::endl;
           rightWheelData.operation_mode = objs[0].operation_mode;
           rightWheelData.target_position = objs[0].target_position;
           rightWheelData.target_velocity = objs[0].target_velocity;

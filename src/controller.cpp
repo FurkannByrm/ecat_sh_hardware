@@ -12,6 +12,8 @@
 #include "ecat_sh_hardware/controller.hpp"
 #include "ecat_sh_hardware/shared_memory_handler.hpp"
 
+using namespace std::chrono_literals;
+
 VelocityLimiter::VelocityLimiter()
 {
 }
@@ -75,7 +77,7 @@ uint16_t transitionToState(CIA402_State state, uint16_t control_word)
     case CIA402_State::NOT_READY_TO_SWITCH_ON:
       return control_word;
     case CIA402_State::SWITCH_ON_DISABLED:
-      return (control_word & 0x01111110) | 0x00000110;
+      return (control_word & 0b01111110) | 0b00000110;
     case CIA402_State::READY_TO_SWITCH_ON:
       return (control_word & 0b01110111) | 0b00000111;
     case CIA402_State::SWITCH_ON:
@@ -142,14 +144,17 @@ int main(int argc, char** argv)
       {
         // dataPackage[0] := right wheel
         rightWheelData = dataPackage[0];
-
+        rightWheelData.operation_mode = 0x09;
         if (CIA402_State rightWheelCurrentState = deriveState(rightWheelData.status_word);
             rightWheelCurrentState != CIA402_State::OPERATION_ENABLED)
         {
-          uint16_t newControlWord = transitionToState(rightWheelCurrentState, rightWheelData.control_word);
+          uint16_t newControlWord = transitionToState(rightWheelCurrentState, rightWheelStateHandler.previousControlWord);
           rightWheelData.control_word = newControlWord;
           rightWheelStateHandler.previousControlWord = newControlWord;
           rightWheelStateHandler.isOperational = false;
+          /*std::cout << "SW: " << rightWheelData.status_word << " " << DEVICE_STATE_STR.at(rightWheelCurrentState) << std::endl;
+          std::cout << "Calculated:" << newControlWord << "Written: " <<rightWheelData.control_word << std::endl;
+ */
         }
         else
         {
@@ -158,6 +163,7 @@ int main(int argc, char** argv)
 
         // dataPackage[1] := left wheel
         leftWheelData = dataPackage[0];
+        leftWheelData.operation_mode = 0x09;
         if (CIA402_State leftWheelCurrentState = deriveState(leftWheelData.status_word);
             leftWheelCurrentState != CIA402_State::OPERATION_ENABLED)
         {
@@ -165,11 +171,14 @@ int main(int argc, char** argv)
           leftWheelData.control_word = newControlWord;
           leftWheelStateHandler.previousControlWord = newControlWord;
           leftWheelStateHandler.isOperational = false;
+          //std::cout << DEVICE_STATE_STR.at(leftWheelCurrentState) << std::endl;
         }
         else
         {
           leftWheelStateHandler.isOperational = true;
         }
+
+        
 
         odomFuture = std::async(
           std::launch::async,
@@ -184,10 +193,7 @@ int main(int argc, char** argv)
     }
 
     bool driversEnabled = (rightWheelStateHandler.isOperational && leftWheelStateHandler.isOperational);
-    if(driversEnabled)
-    {
-      std::cout << "Drivers enabled" << std::endl;
-    }
+  
 /*     rosSyncMutex.lock();
     // If all slaves are operational, write commands:
     if (driversEnabled)
@@ -208,5 +214,6 @@ int main(int argc, char** argv)
     rosDataPtr->odometry = odomFuture.get();
     rosSyncMutex.unlock();
     */
+    std::this_thread::sleep_for(4ms);
   }
 }
