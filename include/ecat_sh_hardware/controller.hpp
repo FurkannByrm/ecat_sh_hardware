@@ -12,8 +12,18 @@
 #ifndef CONTROLLER_HPP_
 #define CONTROLLER_HPP_
 
+//#include <ecat_sh_hardware/ros_communication.hpp>
+
+
+#include <thread>
+#include <mutex>
 #include <algorithm>
+#include <future>
 #include <map>
+#include <functional>
+#include <iostream>
+
+#include "ecat_sh_hardware/kinematics.hpp"
 
 struct VelocityLimiter
 {

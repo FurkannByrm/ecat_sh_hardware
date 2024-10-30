@@ -110,9 +110,29 @@ int main(int argc, char** argv)
   shared_obj_info::EthercatDataObject leftWheelData;
   DriverStateHandler leftWheelStateHandler;
 
+/*   std::shared_ptr<VelocityCommand> velCommandPtr;
+  std::shared_ptr<RosData> rosDataPtr;
+  std::mutex rosSyncMutex; */
+  std::atomic<bool> shutdownRequested = false;
+
+  Odometry odomHandler;
+
+/*   std::thread rosThread(
+    &ros_communication,
+    std::ref(shutdownRequested),
+    std::ref(rosSyncMutex),
+    std::ref(velCommandPtr),
+    std::ref(rosDataPtr)
+  );
+  rosThread.detach(); */
+
   while (run)
   {
+    std::future<Odometry> odomFuture;
+    
     shMemHandler.lockSem();
+
+    timepoint currentTime = std::chrono::high_resolution_clock::now();
 
     auto dataPackageOpt = shMemHandler.getEcDataObject();
     if (dataPackageOpt)
@@ -150,21 +170,43 @@ int main(int argc, char** argv)
         {
           leftWheelStateHandler.isOperational = true;
         }
-      }
 
+        odomFuture = std::async(
+          std::launch::async,
+          &Odometry::update,
+          odomHandler,
+          (double)rightWheelData.current_velocity,
+          (double)leftWheelData.target_velocity,
+          currentTime
+        );
+      }
       
     }
 
     bool driversEnabled = (rightWheelStateHandler.isOperational && leftWheelStateHandler.isOperational);
-
+    if(driversEnabled)
+    {
+      std::cout << "Drivers enabled" << std::endl;
+    }
+/*     rosSyncMutex.lock();
     // If all slaves are operational, write commands:
     if (driversEnabled)
-    {
+    { 
+      // Get data from ROS
 
-    }
+      VelocityCommand velCmd = *velCommandPtr;
+      auto wheelVelocities = getWheelVelocityFromRobotCmd(velCmd.linear, velCmd.angular);
+      rightWheelData.target_velocity = jointVelocityToMotorVelocity(wheelVelocities.first);
+      leftWheelData.target_velocity = jointVelocityToMotorVelocity(wheelVelocities.second);
+      
+    } */
 
     shMemHandler.sendEcDataObject({ rightWheelData, leftWheelData });
-
     shMemHandler.freeSem();
+    /*
+    odomFuture.wait();
+    rosDataPtr->odometry = odomFuture.get();
+    rosSyncMutex.unlock();
+    */
   }
 }

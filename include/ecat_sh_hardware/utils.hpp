@@ -45,4 +45,9 @@ enum class Error {
 };
 } // namespace ecat_sh_hardware
 
+struct PeriodicSleeper
+{
+  
+};
+
 #endif // UTILS_HPP_

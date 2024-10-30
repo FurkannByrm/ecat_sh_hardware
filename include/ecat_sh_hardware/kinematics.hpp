@@ -43,11 +43,21 @@ struct Odometry
 
   timepoint previousUpdateTime;
 
-  Odometry();
+  Odometry(){}
+
+  Odometry& operator=(Odometry other)
+  {
+    this->linearVel = other.linearVel;
+    this->angularVel = other.angularVel;
+    this->x = other.x;
+    this->y = other.y;
+    this->heading = other.heading;
+    return *this;
+  }
 
   void reset();
 
-  void update(double left_wheel_vel, double right_wheel_vel, const timepoint update_time);
+  Odometry update(double left_wheel_vel, double right_wheel_vel, const timepoint update_time);
 };
 
 /**
@@ -57,11 +67,7 @@ struct Odometry
  * @param angular_vel
  * @return std::pair<double, double> return right and left wheel angular velocities respectively
  */
-std::pair<double, double> getWheelVelocityFromRobotCmd(WheelParams params, double linear_vel, double angular_vel)
-{
-  return std::make_pair(((linear_vel + (angular_vel * (params.wheel_seperation / 2.0))) / params.radius),
-                        ((linear_vel - (angular_vel * (params.wheel_seperation / 2.0))) / params.radius));
-}
+std::pair<double, double> getWheelVelocityFromRobotCmd(double linear_vel, double angular_vel);
 
 inline const double motorPositionToJointPosition(const int32_t& motor_position)
 {

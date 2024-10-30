@@ -11,7 +11,7 @@
 
 #include "ecat_sh_hardware/kinematics.hpp"
 
-void Odometry::update(double left_wheel_vel, double right_wheel_vel, const timepoint update_time)
+Odometry Odometry::update(double left_wheel_vel, double right_wheel_vel, const timepoint update_time)
 {
 
   const double linearVelBody = 0.5 * (left_wheel_vel + right_wheel_vel);
@@ -38,6 +38,14 @@ void Odometry::update(double left_wheel_vel, double right_wheel_vel, const timep
 
   previousUpdateTime = update_time;
 
+  return *this;
+
+}
+
+std::pair<double, double> getWheelVelocityFromRobotCmd(double linear_vel, double angular_vel)
+{
+  return std::make_pair(((linear_vel + (angular_vel * (WHEEL_SEPERATION / 2.0))) / WHEEL_RADIUS),
+                        ((linear_vel - (angular_vel * (WHEEL_SEPERATION / 2.0))) / WHEEL_RADIUS));
 }
 
 void Odometry::reset()
