@@ -10,6 +10,8 @@ endif()
 add_compile_options(-std=c++17)
 
 find_package(Threads REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(nav_msgs REQUIRED)
 
 add_executable(
 	diff_drive_hardware
@@ -27,7 +29,7 @@ add_executable(
   src/kinematics.cpp
 )
 target_include_directories(diff_drive_controller PUBLIC include/)
-target_link_libraries(diff_drive_controller rt Threads::Threads)
+target_link_libraries(diff_drive_controller rt Threads::Threads ${rclcpp_LIBRARIES})
 
 
 install(

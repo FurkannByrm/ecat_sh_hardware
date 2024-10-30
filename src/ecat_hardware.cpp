@@ -181,6 +181,15 @@ int main(int argc, char** argv)
 
   ecrt_slave_config_dc(slaveConfigPtr, 0x0300, 2000000, 1000000, 2000000, 0);
 
+  // Set current thread scheduler and priority:
+
+    const sched_param schedParam{.sched_priority = 80};
+    if(sched_setscheduler(0, SCHED_FIFO, &schedParam) != 0)
+    { 
+      std::cout << "Could not set scheduler policy." << std::endl;
+      return 1;
+    }
+
   // Initiliaze shared memory:
 
   SharedMemoryHandler shMemHandler;
@@ -257,8 +266,8 @@ int main(int argc, char** argv)
     if (rightMotorSW)
     {
       rightWheelData.status_word = rightMotorSW.value();
-      std::cout << "SW: " << rightMotorSW.value() << std::endl;
-      std::cout << "Written control word: " << readFromSlave<uint16_t>(domainProcessData, RightMotorEthercatDataOffsets.control_word).value() << std::endl;
+      std::cout << "Right SW: " << rightMotorSW.value() << std::endl;
+      //std::cout << "Written control word: " << readFromSlave<uint16_t>(domainProcessData, RightMotorEthercatDataOffsets.control_word).value() << std::endl;
     }
     auto rightMotorCurrentPosition =
         readFromSlave<int32_t>(domainProcessData, RightMotorEthercatDataOffsets.current_position);
@@ -277,6 +286,8 @@ int main(int argc, char** argv)
     if (leftMotorSW)
     {
       leftWheelData.status_word = leftMotorSW.value();
+      std::cout << "Left SW: " << leftMotorSW.value() << std::endl;
+      
     }
     auto leftMotorCurrentPosition =
         readFromSlave<int32_t>(domainProcessData, LeftMotorEthercatDataOffsets.current_position);
@@ -309,7 +320,7 @@ int main(int argc, char** argv)
           objs[0].current_velocity = rightWheelData.current_velocity;
 
           rightWheelData.control_word = objs[0].control_word;
-          std::cout << "Received control word: " << rightWheelData.control_word << std::endl;
+          std::cout << "Right Driver Received control word: " << rightWheelData.control_word << std::endl;
           rightWheelData.operation_mode = objs[0].operation_mode;
           rightWheelData.target_position = objs[0].target_position;
           rightWheelData.target_velocity = objs[0].target_velocity;
@@ -320,6 +331,7 @@ int main(int argc, char** argv)
           objs[1].current_velocity = leftWheelData.current_velocity;
 
           leftWheelData.control_word = objs[1].control_word;
+          std::cout << "Left Driver Received control word: " << rightWheelData.control_word << std::endl;
           leftWheelData.operation_mode = objs[1].operation_mode;
           leftWheelData.target_position = objs[1].target_position;
           leftWheelData.target_velocity = objs[1].target_velocity;
@@ -331,9 +343,9 @@ int main(int argc, char** argv)
     writeToSlave(domainProcessData, RightMotorEthercatDataOffsets.operation_mode, rightWheelData.operation_mode);
     writeToSlave(domainProcessData, RightMotorEthercatDataOffsets.target_velocity, rightWheelData.target_velocity);
 
-    writeToSlave(domainProcessData, LeftMotorEthercatDataOffsets.control_word, rightWheelData.control_word);
-    writeToSlave(domainProcessData, LeftMotorEthercatDataOffsets.operation_mode, rightWheelData.operation_mode);
-    writeToSlave(domainProcessData, LeftMotorEthercatDataOffsets.target_velocity, rightWheelData.target_velocity);
+    writeToSlave(domainProcessData, LeftMotorEthercatDataOffsets.control_word, leftWheelData.control_word);
+    writeToSlave(domainProcessData, LeftMotorEthercatDataOffsets.operation_mode, leftWheelData.operation_mode);
+    writeToSlave(domainProcessData, LeftMotorEthercatDataOffsets.target_velocity, leftWheelData.target_velocity);
 
     clock_gettime(CLOCK_MONOTONIC, &distributedClockHelper.currentTime);
     if (distributedClockHelper.referenceClockCounter)

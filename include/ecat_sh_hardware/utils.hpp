@@ -8,10 +8,10 @@
 #include <chrono>
 
 template <class TickType, class Period = std::ratio<1>>
-constexpr auto /*std::chrono::duration<TickType, Period>*/
+constexpr std::chrono::duration<TickType, Period>
 timespecToChronoDuration(const timespec &ts) {
-  return std::chrono::duration_cast<std::chrono::duration<TickType, Period>(
-      std::chrono::seconds(ts.tv_sec) + std::chrono::nanoseconds(ts.tv_nsec))>;
+  return std::chrono::duration_cast<std::chrono::duration<TickType, Period>>(
+      std::chrono::seconds(ts.tv_sec) + std::chrono::nanoseconds(ts.tv_nsec));
 }
 
 template <class TickType, class Period = std::ratio<1>>

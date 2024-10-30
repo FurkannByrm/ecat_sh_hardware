@@ -119,14 +119,21 @@ int main(int argc, char** argv)
 
   Odometry odomHandler;
 
-/*   std::thread rosThread(
+  std::thread rosThread(
     &ros_communication,
     std::ref(shutdownRequested),
     std::ref(rosSyncMutex),
     std::ref(velCommandPtr),
     std::ref(rosDataPtr)
   );
-  rosThread.detach(); */
+  rosThread.detach();
+
+    const sched_param schedParam{.sched_priority = 60};
+    if(sched_setscheduler(0, SCHED_FIFO, &schedParam) != 0)
+    { 
+      std::cout << "Could not set scheduler policy." << std::endl;
+      return 1;
+    }
 
   while (run)
   {
@@ -151,10 +158,9 @@ int main(int argc, char** argv)
           uint16_t newControlWord = transitionToState(rightWheelCurrentState, rightWheelStateHandler.previousControlWord);
           rightWheelData.control_word = newControlWord;
           rightWheelStateHandler.previousControlWord = newControlWord;
+          rightWheelStateHandler.previousState = rightWheelCurrentState;
           rightWheelStateHandler.isOperational = false;
-          /*std::cout << "SW: " << rightWheelData.status_word << " " << DEVICE_STATE_STR.at(rightWheelCurrentState) << std::endl;
-          std::cout << "Calculated:" << newControlWord << "Written: " <<rightWheelData.control_word << std::endl;
- */
+
         }
         else
         {
@@ -162,18 +168,18 @@ int main(int argc, char** argv)
         }
 
         // dataPackage[1] := left wheel
-        leftWheelData = dataPackage[0];
+        leftWheelData = dataPackage[1];
         leftWheelData.operation_mode = 0x09;
         if (CIA402_State leftWheelCurrentState = deriveState(leftWheelData.status_word);
             leftWheelCurrentState != CIA402_State::OPERATION_ENABLED)
         {
-          uint16_t newControlWord = transitionToState(leftWheelCurrentState, leftWheelData.control_word);
+          uint16_t newControlWord = transitionToState(leftWheelCurrentState, leftWheelStateHandler.previousControlWord);
           leftWheelData.control_word = newControlWord;
           leftWheelStateHandler.previousControlWord = newControlWord;
+          leftWheelStateHandler.previousState = leftWheelCurrentState;
           leftWheelStateHandler.isOperational = false;
-          //std::cout << DEVICE_STATE_STR.at(leftWheelCurrentState) << std::endl;
         }
-        else
+        else if(CIA402_State leftWheelCurrentState = deriveState(leftWheelData.status_word); leftWheelCurrentState == CIA402_State::OPERATION_ENABLED)
         {
           leftWheelStateHandler.isOperational = true;
         }
@@ -185,7 +191,7 @@ int main(int argc, char** argv)
           &Odometry::update,
           odomHandler,
           (double)rightWheelData.current_velocity,
-          (double)leftWheelData.target_velocity,
+          (double)leftWheelData.current_velocity,
           currentTime
         );
       }
@@ -193,6 +199,16 @@ int main(int argc, char** argv)
     }
 
     bool driversEnabled = (rightWheelStateHandler.isOperational && leftWheelStateHandler.isOperational);
+    if(driversEnabled)
+    {
+      rightWheelData.target_velocity = 150;
+      leftWheelData.target_velocity = 150;
+    }
+    else
+    {
+      rightWheelData.target_velocity = 0;
+      leftWheelData.target_velocity = 0;
+    }
   
 /*     rosSyncMutex.lock();
     // If all slaves are operational, write commands:

@@ -2,8 +2,9 @@
 #define ECAT_HARDWARE_HPP_
 
 #include "ecrt.h"
-
 #include "ecat_sh_hardware/utils.hpp"
+
+#include <sched.h>
 #include <optional>
 #include <stdint.h>
 
