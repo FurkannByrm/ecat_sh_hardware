@@ -112,8 +112,8 @@ int main(int argc, char** argv)
   shared_obj_info::EthercatDataObject leftWheelData;
   DriverStateHandler leftWheelStateHandler;
 
-  std::shared_ptr<VelocityCommand> velCommandPtr;
-  std::shared_ptr<RosData> rosDataPtr;
+  std::shared_ptr<VelocityCommand> velCommandPtr = std::make_shared<VelocityCommand>();
+  std::shared_ptr<RosData> rosDataPtr = std::make_shared<RosData>();
   std::mutex rosSyncMutex;
   std::atomic<bool> shutdownRequested = false;
 

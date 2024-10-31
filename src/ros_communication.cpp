@@ -1,6 +1,11 @@
 
 #include "ecat_sh_hardware/ros_communication.hpp"
 
+void setupOdometryMsg(nav_msgs::msg::Odometry& odom_msg)
+{
+  
+}
+
 void toRosOdom(const Odometry& odom, nav_msgs::msg::Odometry& ros_odom)
 {
   ros_odom.pose.pose.position.x = odom.x;
@@ -20,15 +25,16 @@ void ros_communication(std::atomic<bool>& shutdown_requested, std::mutex& ros_sy
 {
   rclcpp::init(0, nullptr);
 
-  std::shared_ptr<rclcpp::Node> controllerNode;
+  std::shared_ptr<rclcpp::Node> controllerNode = std::make_shared<rclcpp::Node>("diff_drive_controller_node");
 
   std::shared_ptr<VelocityCommand> velCommandPtr = command_ptr;
   std::shared_ptr<RosData> rosDataPtr = data;
   std::queue<geometry_msgs::msg::TwistStamped> velCmdQueue;
   RosData rosData;
+  nav_msgs::msg::Odometry odomMsg;
 
   std::shared_ptr<rclcpp::Subscription<geometry_msgs::msg::TwistStamped>> velCommandSub =
-      controllerNode->create_subscription<geometry_msgs::msg::TwistStamped>(
+      controllerNode->create_subscription<geome y_msgs::msg::TwistStamped>(
           "/diff_drive_controller/velocity_command", rclcpp::SystemDefaultsQoS(),
           [&velCmdQueue](std::shared_ptr<geometry_msgs::msg::TwistStamped> vel_cmd) {
             // Push to command queue
@@ -55,6 +61,8 @@ void ros_communication(std::atomic<bool>& shutdown_requested, std::mutex& ros_sy
     }
     rosData = *data;
     ros_sync_mutex.unlock();
+    toRosOdom(rosData.odometry, odomMsg);
+    odomPub->publish(odomMsg);
   }
 
   rate.sleep();

@@ -33,7 +33,8 @@ struct VelocityCommand
   double angular;
 };
 
+void setupOdometryMsg(nav_msgs::msg::Odometry& odom_msg);
 
-void toRosOdom(const Odometry& odom);
+void toRosOdom(const Odometry& odom, nav_msgs::msg::Odometry& ros_odom);
 
 void ros_communication(std::atomic<bool>& shutdown_requested, std::mutex& ros_sync_mutex, std::shared_ptr<VelocityCommand>& command_ptr, std::shared_ptr<RosData>& data);
