@@ -3,7 +3,33 @@
 
 void setupOdometryMsg(nav_msgs::msg::Odometry& odom_msg)
 {
-  
+  odom_msg.header.frame_id = "odom";
+  odom_msg.child_frame_id = "base_link";
+  odom_msg.pose.pose.position.x = 0.0;
+  odom_msg.pose.pose.position.y = 0.0;
+  odom_msg.pose.pose.position.z = 0.0;
+
+  odom_msg.pose.pose.orientation.w = 0.0;
+  odom_msg.pose.pose.orientation.x = 0.0;
+  odom_msg.pose.pose.orientation.y = 0.0;
+  odom_msg.pose.pose.orientation.z = 0.0;
+
+  odom_msg.twist.twist.linear.x = 0.0;
+  odom_msg.twist.twist.linear.y = 0.0;
+  odom_msg.twist.twist.linear.z = 0.0;
+  odom_msg.twist.twist.angular.x = 0.0;
+  odom_msg.twist.twist.angular.y = 0.0;
+  odom_msg.twist.twist.angular.z = 0.0;
+
+  constexpr std::array<double, 6> positionCovArr = { 0.001, 0.001, 0.001, 0.001, 0.001, 0.01 };
+  constexpr std::array<double, 6> velocityCovArr = { 0.001, 0.001, 0.001, 0.001, 0.001, 0.01 };
+
+  for (std::size_t i = 0; i < 6; i++)
+  {
+    const std::size_t diag_index = 6 * i + i;
+    odom_msg.pose.covariance.at(diag_index) = positionCovArr.at(i);
+    odom_msg.twist.covariance.at(diag_index) = velocityCovArr.at(i);
+  }
 }
 
 void toRosOdom(const Odometry& odom, nav_msgs::msg::Odometry& ros_odom)
@@ -32,9 +58,10 @@ void ros_communication(std::atomic<bool>& shutdown_requested, std::mutex& ros_sy
   std::queue<geometry_msgs::msg::TwistStamped> velCmdQueue;
   RosData rosData;
   nav_msgs::msg::Odometry odomMsg;
+  setupOdometryMsg(odomMsg);
 
   std::shared_ptr<rclcpp::Subscription<geometry_msgs::msg::TwistStamped>> velCommandSub =
-      controllerNode->create_subscription<geome y_msgs::msg::TwistStamped>(
+      controllerNode->create_subscription<geometry_msgs::msg::TwistStamped>(
           "/diff_drive_controller/velocity_command", rclcpp::SystemDefaultsQoS(),
           [&velCmdQueue](std::shared_ptr<geometry_msgs::msg::TwistStamped> vel_cmd) {
             // Push to command queue
@@ -48,21 +75,41 @@ void ros_communication(std::atomic<bool>& shutdown_requested, std::mutex& ros_sy
   exec.add_node(controllerNode);
   rclcpp::Rate rate(250.0);
 
+  rclcpp::Time previousUpdateTime = controllerNode->get_clock()->now();
+  const rclcpp::Duration velocityCommandTimeout = rclcpp::Duration::from_seconds(0.1);
+
   while (!shutdown_requested.load() && rclcpp::ok())
   {
     exec.spin_once();
+    rclcpp::Time currentTime = controllerNode->get_clock()->now();
     ros_sync_mutex.lock();
 
     if (!velCmdQueue.empty())
     {
-      auto currCommand = velCmdQueue.front().twist;
-      *command_ptr = { currCommand.linear.x, currCommand.angular.z };
-      velCmdQueue.pop();
+      const auto timeElapsedSinceLatestUpdate = currentTime - previousUpdateTime;
+      if ((timeElapsedSinceLatestUpdate >= velocityCommandTimeout))
+      {
+        auto currCommand = velCmdQueue.front().twist;
+        *command_ptr = { currCommand.linear.x, currCommand.angular.z };
+        velCmdQueue.pop();
+      }
+      else
+      {
+        velCmdQueue.pop();
+      }
+    }
+    else
+    {
+      *command_ptr = {0.0, 0.0};
     }
     rosData = *data;
     ros_sync_mutex.unlock();
     toRosOdom(rosData.odometry, odomMsg);
+
+    odomMsg.header.stamp = currentTime;
     odomPub->publish(odomMsg);
+
+    previousUpdateTime = currentTime;
   }
 
   rate.sleep();
