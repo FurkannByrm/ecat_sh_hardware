@@ -71,7 +71,7 @@ void ros_communication(std::atomic<bool>& shutdown_requested, std::mutex& ros_sy
       controllerNode->create_publisher<nav_msgs::msg::Odometry>("/diff_drive_controller/odometry",
                                                                 rclcpp::SystemDefaultsQoS());
 
-  rclcpp::executors::MultiThreadedExecutor exec;
+  rclcpp::executors::SingleThreadedExecutor exec;
   exec.add_node(controllerNode);
   rclcpp::Rate rate(250.0);
 
@@ -80,7 +80,7 @@ void ros_communication(std::atomic<bool>& shutdown_requested, std::mutex& ros_sy
 
   while (!shutdown_requested.load() && rclcpp::ok())
   {
-    exec.spin_once();
+    exec.spin_some();
     rclcpp::Time currentTime = controllerNode->get_clock()->now();
     ros_sync_mutex.lock();
 
@@ -110,7 +110,8 @@ void ros_communication(std::atomic<bool>& shutdown_requested, std::mutex& ros_sy
     odomPub->publish(odomMsg);
 
     previousUpdateTime = currentTime;
+    rate.sleep();
   }
 
-  rate.sleep();
+  
 }
