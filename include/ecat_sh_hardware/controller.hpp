@@ -12,7 +12,7 @@
 #ifndef CONTROLLER_HPP_
 #define CONTROLLER_HPP_
 
-//#include <ecat_sh_hardware/ros_communication.hpp>
+#include "ecat_sh_hardware/ros_communication.hpp"
 
 
 #include <thread>

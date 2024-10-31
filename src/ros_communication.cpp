@@ -30,7 +30,7 @@ void ros_communication(std::atomic<bool>& shutdown_requested, std::mutex& ros_sy
   std::shared_ptr<rclcpp::Subscription<geometry_msgs::msg::TwistStamped>> velCommandSub =
       controllerNode->create_subscription<geometry_msgs::msg::TwistStamped>(
           "/diff_drive_controller/velocity_command", rclcpp::SystemDefaultsQoS(),
-          [&velCmdQueue](const geometry_msgs::msg::TwistStamped::SharedPtr& vel_cmd) {
+          [&velCmdQueue](std::shared_ptr<geometry_msgs::msg::TwistStamped> vel_cmd) {
             // Push to command queue
             velCmdQueue.push(*vel_cmd);
           });
@@ -40,6 +40,7 @@ void ros_communication(std::atomic<bool>& shutdown_requested, std::mutex& ros_sy
 
   rclcpp::executors::MultiThreadedExecutor exec;
   exec.add_node(controllerNode);
+  rclcpp::Rate rate(250.0);
 
   while (!shutdown_requested.load() && rclcpp::ok())
   {
@@ -55,4 +56,6 @@ void ros_communication(std::atomic<bool>& shutdown_requested, std::mutex& ros_sy
     rosData = *data;
     ros_sync_mutex.unlock();
   }
+
+  rate.sleep();
 }

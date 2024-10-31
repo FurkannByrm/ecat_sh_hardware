@@ -43,9 +43,19 @@ struct Odometry
 
   timepoint previousUpdateTime;
 
-  Odometry(){}
+  Odometry()
+  {
+  }
 
-  Odometry& operator=(Odometry other)
+  Odometry(const Odometry& other)
+  {
+    this->linearVel = other.linearVel;
+    this->angularVel = other.angularVel;
+    this->x = other.x;
+    this->y = other.y;
+    this->heading = other.heading;
+  }
+  Odometry& operator=(const Odometry& other)
   {
     this->linearVel = other.linearVel;
     this->angularVel = other.angularVel;
@@ -53,6 +63,15 @@ struct Odometry
     this->y = other.y;
     this->heading = other.heading;
     return *this;
+  }
+
+  Odometry(Odometry&& other)
+  {
+    this->linearVel = other.linearVel;
+    this->angularVel = other.angularVel;
+    this->x = other.x;
+    this->y = other.y;
+    this->heading = other.heading;
   }
 
   void reset();
