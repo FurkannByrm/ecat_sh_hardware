@@ -141,11 +141,11 @@ int main(int argc, char** argv)
   {
     std::future<Odometry> odomFuture;
 
-    shMemHandler.lockSem();
-
     //timepoint currentTime = std::chrono::high_resolution_clock::now();
-
+    if(shMemHandler.tryLockSem() == 0)
+    {
     auto dataPackageOpt = shMemHandler.getEcDataObject();
+    shMemHandler.freeSem();
     if (dataPackageOpt)
     {
       const std::vector<shared_obj_info::EthercatDataObject> dataPackage = dataPackageOpt.value();
@@ -160,6 +160,7 @@ int main(int argc, char** argv)
           uint16_t newControlWord =
               transitionToState(rightWheelCurrentState, rightWheelStateHandler.previousControlWord);
           rightWheelData.control_word = newControlWord;
+          std::cout << "Right new control word: " << newControlWord << std::endl;
           rightWheelStateHandler.previousControlWord = newControlWord;
           rightWheelStateHandler.previousState = rightWheelCurrentState;
           rightWheelStateHandler.isOperational = false;
@@ -177,6 +178,7 @@ int main(int argc, char** argv)
         {
           uint16_t newControlWord = transitionToState(leftWheelCurrentState, leftWheelStateHandler.previousControlWord);
           leftWheelData.control_word = newControlWord;
+          std::cout << "Left new control word: " << newControlWord << std::endl;
           leftWheelStateHandler.previousControlWord = newControlWord;
           leftWheelStateHandler.previousState = leftWheelCurrentState;
           leftWheelStateHandler.isOperational = false;
@@ -195,17 +197,21 @@ int main(int argc, char** argv)
 
     bool driversEnabled = (rightWheelStateHandler.isOperational && leftWheelStateHandler.isOperational);
 
-    rosSyncMutex.lock();
+/*     rosSyncMutex.lock();
     VelocityCommand velCmd = *velCommandPtr;
-    
-    rosSyncMutex.unlock();
+    rosSyncMutex.unlock(); */
+
     // If all slaves are operational, write commands:
     if (driversEnabled)
     {
       // Get data from ROS
-      auto wheelVelocities = getWheelVelocityFromRobotCmd(velCmd.linear, velCmd.angular);     
-      rightWheelData.target_velocity = jointVelocityToMotorVelocity(wheelVelocities.first);
-      leftWheelData.target_velocity = jointVelocityToMotorVelocity(wheelVelocities.second);
+      
+/*       auto wheelVelocities = getWheelVelocityFromRobotCmd(velCmd.linear, velCmd.angular);     
+ *//*       rightWheelData.target_velocity = jointVelocityToMotorVelocity(wheelVelocities.first);
+      leftWheelData.target_velocity = jointVelocityToMotorVelocity(wheelVelocities.second); */
+            rightWheelData.target_velocity = 75;
+      leftWheelData.target_velocity = 75;
+      //std::cout << "Target: " << leftWheelData.target_velocity << std::endl;
     }
     else
     {
@@ -213,10 +219,15 @@ int main(int argc, char** argv)
       leftWheelData.target_velocity = 0;
     }
     
-
+    shMemHandler.lockSem();
     shMemHandler.sendEcDataObject({ rightWheelData, leftWheelData });
-    shMemHandler.freeSem();
-    
+    bool couldFreeSem = shMemHandler.freeSem();
+    }
+    else
+    {
+      std::cout << "COuld not get lock on sem " << std::endl;
+      printf("%s\n", strerror(errno));
+    }
 /*     odomFuture.wait();
     rosDataPtr->odometry = odomFuture.get(); */
 

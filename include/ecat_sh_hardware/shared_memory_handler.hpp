@@ -10,6 +10,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <string.h>
+#include <errno.h>
 
 #include <optional>
 #include <memory>
@@ -43,18 +45,20 @@ public:
   ecat_sh_hardware::Error sendEcDataObject(
       const std::vector<shared_obj_info::EthercatDataObject> &objects);
 
-  inline bool tryLockSem()
+  inline int tryLockSem()
   {
     return sem_trywait(m_EcatDataSem.get());
   }
   
   inline bool lockSem() {
     int gotLock = sem_wait(m_EcatDataSem.get());
+    //printf("%s\n", strerror(errno));
     return (gotLock == 0 ? true : false);
   }
 
   inline bool freeSem() {
     int couldFree = sem_post(m_EcatDataSem.get());
+    //printf("%s\n", strerror(errno));
     return (couldFree == 0 ? true : false);
   }
 

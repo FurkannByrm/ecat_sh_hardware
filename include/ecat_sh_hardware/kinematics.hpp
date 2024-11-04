@@ -126,7 +126,7 @@ inline const double motorVelocityToJointVelocity(const int32_t& motor_velocity)
  */
 inline const int32_t jointVelocityToMotorVelocity(const double& joint_velocity)
 {
-  constexpr auto coe = (60.0 * WHEEL_TO_MOTOR_REDUCTION) / (2.0 * M_PI);
+  constexpr double coe = (60.0 * WHEEL_TO_MOTOR_REDUCTION) / (2.0 * M_PI);
   return joint_velocity * coe;
 }
 

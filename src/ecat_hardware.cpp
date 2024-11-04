@@ -306,7 +306,12 @@ int main(int argc, char** argv)
     if (shMemHandler.tryLockSem() == 0)
     {
       shMemHandler.sendEcDataObject({rightWheelData, leftWheelData});
+      shMemHandler.freeSem();
+
+      shMemHandler.lockSem();
       auto receivedDataObj = shMemHandler.getEcDataObject();
+      shMemHandler.freeSem();
+      
       if (receivedDataObj)
       {
         std::vector objs = receivedDataObj.value();
@@ -318,9 +323,9 @@ int main(int argc, char** argv)
           objs[0].status_word = rightWheelData.status_word;
           objs[0].current_position = rightWheelData.current_position;
           objs[0].current_velocity = rightWheelData.current_velocity;
-
+          std::cout << "Right control word: " << objs[0].control_word << std::endl;
           rightWheelData.control_word = objs[0].control_word;
-          std::cout << "Right Driver Received control word: " << rightWheelData.control_word << std::endl;
+          
           rightWheelData.operation_mode = objs[0].operation_mode;
           rightWheelData.target_position = objs[0].target_position;
           rightWheelData.target_velocity = objs[0].target_velocity;
@@ -329,14 +334,19 @@ int main(int argc, char** argv)
           objs[1].status_word = leftWheelData.status_word;
           objs[1].current_position = leftWheelData.current_position;
           objs[1].current_velocity = leftWheelData.current_velocity;
-
+          std::cout << "Left control word: " << objs[1].control_word << std::endl;
           leftWheelData.control_word = objs[1].control_word;
-          std::cout << "Left Driver Received control word: " << rightWheelData.control_word << std::endl;
           leftWheelData.operation_mode = objs[1].operation_mode;
           leftWheelData.target_position = objs[1].target_position;
           leftWheelData.target_velocity = objs[1].target_velocity;
+          std::cout << "left wheel velocity: " <<leftWheelData.target_velocity << std::endl;
         }
       }
+    }
+    else
+    {
+      std::cout << "Could not get lock on semaphore" << std::endl;
+      printf("%s\n", strerror(errno));
     }
 
     writeToSlave(domainProcessData, RightMotorEthercatDataOffsets.control_word, rightWheelData.control_word);

@@ -70,7 +70,10 @@ void ros_communication(std::atomic<bool>& shutdown_requested, std::mutex& ros_sy
   std::shared_ptr<rclcpp::Publisher<nav_msgs::msg::Odometry>> odomPub =
       controllerNode->create_publisher<nav_msgs::msg::Odometry>("/diff_drive_controller/odometry",
                                                                 rclcpp::SystemDefaultsQoS());
-
+  auto cleanupRosMembers = [&]() -> void {
+    velCommandSub.reset();
+    odomPub.reset();
+  };
   rclcpp::executors::SingleThreadedExecutor exec;
   exec.add_node(controllerNode);
   rclcpp::Rate rate(250.0);
@@ -83,20 +86,20 @@ void ros_communication(std::atomic<bool>& shutdown_requested, std::mutex& ros_sy
     exec.spin_some();
     rclcpp::Time currentTime = controllerNode->get_clock()->now();
     ros_sync_mutex.lock();
-
+    const auto timeElapsedSinceLatestUpdate = currentTime - previousUpdateTime;
     if (!velCmdQueue.empty())
     {
-      const auto timeElapsedSinceLatestUpdate = currentTime - previousUpdateTime;
-      if ((timeElapsedSinceLatestUpdate >= velocityCommandTimeout))
+
+/*       if ((timeElapsedSinceLatestUpdate <= velocityCommandTimeout))
       {
         auto currCommand = velCmdQueue.front().twist;
-        *command_ptr = { currCommand.linear.x, currCommand.angular.z };
-        velCmdQueue.pop();
-      }
-      else
-      {
-        velCmdQueue.pop();
-      }
+        std::cout << velCmdQueue.size() << std::endl;
+        *command_ptr = { currCommand.linear.x, currCommand.angular.z };  
+      } */
+              auto currCommand = velCmdQueue.front().twist;
+        
+        *command_ptr = { currCommand.linear.x, currCommand.angular.z };  
+      velCmdQueue.pop();
     }
     else
     {
@@ -113,5 +116,8 @@ void ros_communication(std::atomic<bool>& shutdown_requested, std::mutex& ros_sy
     rate.sleep();
   }
 
+  cleanupRosMembers();
+
+  rclcpp::shutdown();
   
 }

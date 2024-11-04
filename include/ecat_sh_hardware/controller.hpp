@@ -23,6 +23,9 @@
 #include <functional>
 #include <iostream>
 
+#include <string.h>
+#include <errno.h>
+
 #include "ecat_sh_hardware/kinematics.hpp"
 
 struct VelocityLimiter

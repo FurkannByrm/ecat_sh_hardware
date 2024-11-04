@@ -44,8 +44,9 @@ Odometry Odometry::update(double left_wheel_vel, double right_wheel_vel, const t
 
 std::pair<double, double> getWheelVelocityFromRobotCmd(double linear_vel, double angular_vel)
 {
-  return std::make_pair(((linear_vel + (angular_vel * (WHEEL_SEPERATION / 2.0))) / WHEEL_RADIUS),
-                        ((linear_vel - (angular_vel * (WHEEL_SEPERATION / 2.0))) / WHEEL_RADIUS));
+  double rightWheelVel = (linear_vel + (angular_vel * (WHEEL_SEPERATION / 2.0))) / WHEEL_RADIUS;
+  double leftWheelVel = (linear_vel - (angular_vel * (WHEEL_SEPERATION / 2.0))) / WHEEL_RADIUS;
+  return std::make_pair(rightWheelVel, leftWheelVel);
 }
 
 void Odometry::reset()

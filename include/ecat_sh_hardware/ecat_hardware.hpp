@@ -7,6 +7,8 @@
 #include <sched.h>
 #include <optional>
 #include <stdint.h>
+#include <string.h>
+#include <errno.h>
 
 template <typename T>
 std::optional<T> readFromSlave(uint8_t *domainDataPtr, uint object_offset) {

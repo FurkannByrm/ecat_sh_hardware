@@ -6,8 +6,6 @@
 #include <semaphore.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
-#include <string.h>
-#include <errno.h>
 
 #include <iostream>
 

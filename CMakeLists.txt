@@ -4,7 +4,7 @@ project(ecat_sh_hardware VERSION 0.1 LANGUAGES C CXX)
 set(CXX_STANDARD 17)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
-  add_compile_options(-Wall -Wextra -Werror=unused-but-set-variable -Werror=return-type)
+  add_compile_options(-Wall -Wextra  -Werror=return-type)
 endif()
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
