@@ -4,6 +4,8 @@
 #include "ecrt.h"
 #include "ecat_sh_hardware/utils.hpp"
 
+#include "ipc_handlers/shm_handler.hpp"
+
 #include <sched.h>
 #include <optional>
 #include <stdint.h>

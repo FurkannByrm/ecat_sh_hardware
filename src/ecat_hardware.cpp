@@ -1,6 +1,5 @@
 
 #include "ecat_sh_hardware/ecat_hardware.hpp"
-#include "ecat_sh_hardware/shared_memory_handler.hpp"
 #include "ecat_sh_hardware/shared_obj.hpp"
 #include "ecrt.h"
 
@@ -83,12 +82,8 @@ const ec_pdo_entry_reg_t domainRegistries[] = {
   {}
 };
 
-ec_pdo_entry_info_t right_motor_pdo_entries[] = { { 0x6040, 0x00, 16 },
-                                                  { 0x6060, 0x00, 8 },
-                                                  { 0x607a, 0x00, 32 },
-                                                  { 0x60ff, 0x00, 32 },
-                                                  { 0x6041, 0x00, 16 },
-                                                  { 0x6064, 0x00, 32 },
+ec_pdo_entry_info_t right_motor_pdo_entries[] = { { 0x6040, 0x00, 16 }, { 0x6060, 0x00, 8 },  { 0x607a, 0x00, 32 },
+                                                  { 0x60ff, 0x00, 32 }, { 0x6041, 0x00, 16 }, { 0x6064, 0x00, 32 },
                                                   { 0x606c, 0x00, 32 } };
 
 ec_pdo_info_t right_motor_pdo_info[] = { { 0x1603, 4, right_motor_pdo_entries + 0 },
@@ -100,12 +95,8 @@ ec_sync_info_t right_motor_slave_syncs[] = { { 0, EC_DIR_OUTPUT, 0, NULL, EC_WD_
                                              { 3, EC_DIR_INPUT, 1, right_motor_pdo_info + 1, EC_WD_DISABLE },
                                              { 0xff } };
 
-ec_pdo_entry_info_t left_motor_pdo_entries[] = { { 0x6040, 0x00, 16 },
-                                                 { 0x6060, 0x00, 8 },
-                                                 { 0x607a, 0x00, 32 },
-                                                 { 0x60ff, 0x00, 32 },
-                                                 { 0x6041, 0x00, 16 },
-                                                 { 0x6064, 0x00, 32 },
+ec_pdo_entry_info_t left_motor_pdo_entries[] = { { 0x6040, 0x00, 16 }, { 0x6060, 0x00, 8 },  { 0x607a, 0x00, 32 },
+                                                 { 0x60ff, 0x00, 32 }, { 0x6041, 0x00, 16 }, { 0x6064, 0x00, 32 },
                                                  { 0x606c, 0x00, 32 } };
 
 ec_pdo_info_t left_motor_pdo_info[] = { { 0x1603, 4, left_motor_pdo_entries + 0 },
@@ -183,22 +174,27 @@ int main(int argc, char** argv)
 
   // Set current thread scheduler and priority:
 
-    const sched_param schedParam{.sched_priority = 80};
-    if(sched_setscheduler(0, SCHED_FIFO, &schedParam) != 0)
-    { 
-      std::cout << "Could not set scheduler policy." << std::endl;
-      return 1;
-    }
+  const sched_param schedParam{ .sched_priority = 80 };
+  if (sched_setscheduler(0, SCHED_FIFO, &schedParam) != 0)
+  {
+    std::cout << "Could not set scheduler policy." << std::endl;
+    return 1;
+  }
 
   // Initiliaze shared memory:
 
-  SharedMemoryHandler shMemHandler;
+  std::expected<shm_handler::SharedMemoryHandler<shared_obj_info::EthercatDataObject, 2>, shm_handler::Error>
+      sharedMemoryHandlerInit = shm_handler::SharedMemoryHandler<shared_obj_info::EthercatDataObject, 2>::create(
+          shared_obj_info::SHARED_MEMORY_SEG_NAME, shared_obj_info::ETHERCAT_DATA_SEM_NAME, shm_handler::Mode::CREATE);
 
-  if (shMemHandler.init() != ecat_sh_hardware::Error::NoError)
+  if (!sharedMemoryHandlerInit.has_value())
   {
-    std::cout << "Could not initialize shared memory handler" << std::endl;
-    return 1;
+    std::cout << "Could not create Shared Memory Handler: " << shm_handler::ErrorMap.at(sharedMemoryHandlerInit.error())
+              << std::endl;
+    return 10;
   }
+
+  auto sharedMemoryHandler = std::move(sharedMemoryHandlerInit.value());
 
   // Activate EtherCAT:
 
@@ -228,14 +224,14 @@ int main(int argc, char** argv)
   auto periodNs = ecat_sh_hardware::NANOSEC_PER_SEC / 500;
   distributedClockHelper.cycleTime = { 0, periodNs };
   distributedClockHelper.referenceClockCounter = 0;
-/* 
-  struct sched_param processParam = {};
-  processParam.sched_priority = sched_get_priority_max(SCHED_FIFO);
-  if(sched_setscheduler(0, SCHED_FIFO, &processParam) != 0)
-  {
-    std::cout << "Could not change process priority" << std::endl;
-    return 1;
-  } */
+  /*
+    struct sched_param processParam = {};
+    processParam.sched_priority = sched_get_priority_max(SCHED_FIFO);
+    if(sched_setscheduler(0, SCHED_FIFO, &processParam) != 0)
+    {
+      std::cout << "Could not change process priority" << std::endl;
+      return 1;
+    } */
   timespec startTime;
   timespec lastStartTime = startTime;
   clock_gettime(CLOCK_MONOTONIC, &startTime);
@@ -247,7 +243,8 @@ int main(int argc, char** argv)
     clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &distributedClockHelper.wakeupTime, NULL);
 
     clock_gettime(CLOCK_MONOTONIC, &startTime);
-    timespec periodTs = {.tv_sec = startTime.tv_sec - lastStartTime.tv_sec, .tv_nsec = startTime.tv_nsec - lastStartTime.tv_nsec};
+    timespec periodTs = { .tv_sec = startTime.tv_sec - lastStartTime.tv_sec,
+                          .tv_nsec = startTime.tv_nsec - lastStartTime.tv_nsec };
     lastStartTime = startTime;
 
     std::chrono::duration<double> periodAsSecs = timespecToChronoDuration<double, std::ratio<1>>(periodTs);
@@ -267,7 +264,8 @@ int main(int argc, char** argv)
     {
       rightWheelData.status_word = rightMotorSW.value();
       std::cout << "Right SW: " << rightMotorSW.value() << std::endl;
-      //std::cout << "Written control word: " << readFromSlave<uint16_t>(domainProcessData, RightMotorEthercatDataOffsets.control_word).value() << std::endl;
+      // std::cout << "Written control word: " << readFromSlave<uint16_t>(domainProcessData,
+      // RightMotorEthercatDataOffsets.control_word).value() << std::endl;
     }
     auto rightMotorCurrentPosition =
         readFromSlave<int32_t>(domainProcessData, RightMotorEthercatDataOffsets.current_position);
@@ -287,7 +285,6 @@ int main(int argc, char** argv)
     {
       leftWheelData.status_word = leftMotorSW.value();
       std::cout << "Left SW: " << leftMotorSW.value() << std::endl;
-      
     }
     auto leftMotorCurrentPosition =
         readFromSlave<int32_t>(domainProcessData, LeftMotorEthercatDataOffsets.current_position);
@@ -303,50 +300,28 @@ int main(int argc, char** argv)
     }
 
     // If we get a lock on the semaphore, read/write from/to EtherCAT:
-    if (shMemHandler.tryLockSem() == 0)
+
+    if (sharedMemoryHandler.tryLock())
     {
-      shMemHandler.sendEcDataObject({rightWheelData, leftWheelData});
-      shMemHandler.freeSem();
+      auto& rightWheelShData = sharedMemoryHandler.getDataPtr()[0];
+      rightWheelData.status_word = rightWheelShData.status_word;
+      rightWheelData.current_position = rightWheelShData.current_position;
+      rightWheelData.current_velocity = rightWheelShData.current_velocity;
 
-      shMemHandler.lockSem();
-      auto receivedDataObj = shMemHandler.getEcDataObject();
-      shMemHandler.freeSem();
-      
-      if (receivedDataObj)
-      {
-        std::vector objs = receivedDataObj.value();
+      rightWheelData.control_word = rightWheelShData.control_word;
+      rightWheelData.target_position = rightWheelShData.target_position;
+      rightWheelData.target_velocity = rightWheelShData.target_velocity;
 
-        if (!objs.empty())
-        {
-          // objs[0] := right wheel
+      auto& leftWheelShData = sharedMemoryHandler.getDataPtr()[1];
+      leftWheelData.status_word = leftWheelShData.status_word;
+      leftWheelData.current_position = leftWheelShData.current_position;
+      leftWheelData.current_velocity = leftWheelShData.current_velocity;
 
-          objs[0].status_word = rightWheelData.status_word;
-          objs[0].current_position = rightWheelData.current_position;
-          objs[0].current_velocity = rightWheelData.current_velocity;
-          std::cout << "Right control word: " << objs[0].control_word << std::endl;
-          rightWheelData.control_word = objs[0].control_word;
-          
-          rightWheelData.operation_mode = objs[0].operation_mode;
-          rightWheelData.target_position = objs[0].target_position;
-          rightWheelData.target_velocity = objs[0].target_velocity;
+      leftWheelData.control_word = leftWheelShData.control_word;
+      leftWheelData.target_position = leftWheelShData.target_position;
+      leftWheelData.target_velocity = leftWheelShData.target_velocity;
 
-          // objs[1] := left wheel
-          objs[1].status_word = leftWheelData.status_word;
-          objs[1].current_position = leftWheelData.current_position;
-          objs[1].current_velocity = leftWheelData.current_velocity;
-          std::cout << "Left control word: " << objs[1].control_word << std::endl;
-          leftWheelData.control_word = objs[1].control_word;
-          leftWheelData.operation_mode = objs[1].operation_mode;
-          leftWheelData.target_position = objs[1].target_position;
-          leftWheelData.target_velocity = objs[1].target_velocity;
-          std::cout << "left wheel velocity: " <<leftWheelData.target_velocity << std::endl;
-        }
-      }
-    }
-    else
-    {
-      std::cout << "Could not get lock on semaphore" << std::endl;
-      printf("%s\n", strerror(errno));
+      sharedMemoryHandler.unlock();
     }
 
     writeToSlave(domainProcessData, RightMotorEthercatDataOffsets.control_word, rightWheelData.control_word);

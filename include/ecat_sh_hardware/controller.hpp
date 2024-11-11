@@ -13,7 +13,7 @@
 #define CONTROLLER_HPP_
 
 #include "ecat_sh_hardware/ros_communication.hpp"
-
+#include "ecat_sh_hardware/shared_obj.hpp"
 
 #include <thread>
 #include <mutex>
@@ -27,6 +27,7 @@
 #include <errno.h>
 
 #include "ecat_sh_hardware/kinematics.hpp"
+#include "ipc_handlers/shm_handler.hpp"
 
 struct VelocityLimiter
 {

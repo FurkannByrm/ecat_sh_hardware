@@ -10,7 +10,6 @@
  */
 
 #include "ecat_sh_hardware/controller.hpp"
-#include "ecat_sh_hardware/shared_memory_handler.hpp"
 
 using namespace std::chrono_literals;
 
@@ -104,13 +103,18 @@ uint16_t transitionToState(CIA402_State state, uint16_t control_word)
 
 int main(int argc, char** argv)
 {
-  SharedMemoryHandler shMemHandler;
+  std::expected<shm_handler::SharedMemoryHandler<shared_obj_info::EthercatDataObject, 2>, shm_handler::Error>
+      sharedMemoryHandlerInit = shm_handler::SharedMemoryHandler<shared_obj_info::EthercatDataObject, 2>::create(
+          shared_obj_info::SHARED_MEMORY_SEG_NAME, shared_obj_info::ETHERCAT_DATA_SEM_NAME, shm_handler::Mode::OPEN);
 
-  if (shMemHandler.init(ShMode::User) != ecat_sh_hardware::Error::NoError)
+  if (!sharedMemoryHandlerInit.has_value())
   {
-    return 1;
+    std::cout << "Could not create Shared Memory Handler: " << shm_handler::ErrorMap.at(sharedMemoryHandlerInit.error())
+              << std::endl;
+    return 10;
   }
 
+  auto sharedMemoryHandler = std::move(sharedMemoryHandlerInit.value());
 
   shared_obj_info::EthercatDataObject rightWheelData;
   DriverStateHandler rightWheelStateHandler;
@@ -141,96 +145,77 @@ int main(int argc, char** argv)
   {
     std::future<Odometry> odomFuture;
 
-    //timepoint currentTime = std::chrono::high_resolution_clock::now();
-    if(shMemHandler.tryLockSem() == 0)
+    // timepoint currentTime = std::chrono::high_resolution_clock::now();
+    if (sharedMemoryHandler.lock())
     {
-    auto dataPackageOpt = shMemHandler.getEcDataObject();
-    shMemHandler.freeSem();
-    if (dataPackageOpt)
-    {
-      const std::vector<shared_obj_info::EthercatDataObject> dataPackage = dataPackageOpt.value();
-      if (!dataPackage.empty())
+      // dataPackage[0] := right wheel
+      auto& rightWheelShData = sharedMemoryHandler.getDataPtr()[0];
+
+      rightWheelShData.operation_mode = 0x09;
+      if (CIA402_State rightWheelCurrentState = deriveState(rightWheelShData.status_word);
+          rightWheelCurrentState != CIA402_State::OPERATION_ENABLED)
       {
-        // dataPackage[0] := right wheel
-        rightWheelData = dataPackage[0];
-        rightWheelData.operation_mode = 0x09;
-        if (CIA402_State rightWheelCurrentState = deriveState(rightWheelData.status_word);
-            rightWheelCurrentState != CIA402_State::OPERATION_ENABLED)
-        {
-          uint16_t newControlWord =
-              transitionToState(rightWheelCurrentState, rightWheelStateHandler.previousControlWord);
-          rightWheelData.control_word = newControlWord;
-          std::cout << "Right new control word: " << newControlWord << std::endl;
-          rightWheelStateHandler.previousControlWord = newControlWord;
-          rightWheelStateHandler.previousState = rightWheelCurrentState;
-          rightWheelStateHandler.isOperational = false;
-        }
-        else
-        {
-          rightWheelStateHandler.isOperational = true;
-        }
+        uint16_t newControlWord = transitionToState(rightWheelCurrentState, rightWheelStateHandler.previousControlWord);
+        rightWheelShData.control_word = newControlWord;
+        std::cout << "Right new control word: " << newControlWord << std::endl;
+        rightWheelStateHandler.previousControlWord = newControlWord;
+        rightWheelStateHandler.previousState = rightWheelCurrentState;
+        rightWheelStateHandler.isOperational = false;
+      }
+      else
+      {
+        rightWheelStateHandler.isOperational = true;
+      }
 
-        // dataPackage[1] := left wheel
-        leftWheelData = dataPackage[1];
-        leftWheelData.operation_mode = 0x09;
-        if (CIA402_State leftWheelCurrentState = deriveState(leftWheelData.status_word);
-            leftWheelCurrentState != CIA402_State::OPERATION_ENABLED)
-        {
-          uint16_t newControlWord = transitionToState(leftWheelCurrentState, leftWheelStateHandler.previousControlWord);
-          leftWheelData.control_word = newControlWord;
-          std::cout << "Left new control word: " << newControlWord << std::endl;
-          leftWheelStateHandler.previousControlWord = newControlWord;
-          leftWheelStateHandler.previousState = leftWheelCurrentState;
-          leftWheelStateHandler.isOperational = false;
-        }
-        else if (CIA402_State leftWheelCurrentState = deriveState(leftWheelData.status_word);
-                 leftWheelCurrentState == CIA402_State::OPERATION_ENABLED)
-        {
-          leftWheelStateHandler.isOperational = true;
-        }
+      // dataPackage[1] := left wheel
+      auto& leftWheelShData = sharedMemoryHandler.getDataPtr()[1];
+      leftWheelShData.operation_mode = 0x09;
+      if (CIA402_State leftWheelCurrentState = deriveState(leftWheelShData.status_word);
+          leftWheelCurrentState != CIA402_State::OPERATION_ENABLED)
+      {
+        uint16_t newControlWord = transitionToState(leftWheelCurrentState, leftWheelStateHandler.previousControlWord);
+        leftWheelShData.control_word = newControlWord;
+        std::cout << "Left new control word: " << newControlWord << std::endl;
+        leftWheelStateHandler.previousControlWord = newControlWord;
+        leftWheelStateHandler.previousState = leftWheelCurrentState;
+        leftWheelStateHandler.isOperational = false;
+      }
+      else if (CIA402_State leftWheelCurrentState = deriveState(leftWheelShData.status_word);
+               leftWheelCurrentState == CIA402_State::OPERATION_ENABLED)
+      {
+        leftWheelStateHandler.isOperational = true;
+      }
 
-/*         odomFuture =
-            std::async(std::launch::async, &Odometry::update, odomHandler, (double)rightWheelData.current_velocity,
-                       (double)leftWheelData.current_velocity, currentTime); */
+      /*         odomFuture =
+                  std::async(std::launch::async, &Odometry::update, odomHandler,
+         (double)rightWheelData.current_velocity, (double)leftWheelData.current_velocity, currentTime); */
+
+      bool driversEnabled = (rightWheelStateHandler.isOperational && leftWheelStateHandler.isOperational);
+
+      /*     rosSyncMutex.lock();
+          VelocityCommand velCmd = *velCommandPtr;
+          rosSyncMutex.unlock(); */
+
+      // If all slaves are operational, write commands:
+      if (driversEnabled)
+      {
+        // Get data from ROS
+
+        /*       auto wheelVelocities = getWheelVelocityFromRobotCmd(velCmd.linear, velCmd.angular);
+         *//*       rightWheelData.target_velocity = jointVelocityToMotorVelocity(wheelVelocities.first);
+      leftWheelData.target_velocity = jointVelocityToMotorVelocity(wheelVelocities.second); */
+        rightWheelData.target_velocity = 0;
+        leftWheelData.target_velocity = 0;
+        // std::cout << "Target: " << leftWheelData.target_velocity << std::endl;
+      }
+      else
+      {
+        rightWheelData.target_velocity = 0;
+        leftWheelData.target_velocity = 0;
       }
     }
-
-    bool driversEnabled = (rightWheelStateHandler.isOperational && leftWheelStateHandler.isOperational);
-
-/*     rosSyncMutex.lock();
-    VelocityCommand velCmd = *velCommandPtr;
-    rosSyncMutex.unlock(); */
-
-    // If all slaves are operational, write commands:
-    if (driversEnabled)
-    {
-      // Get data from ROS
-      
-/*       auto wheelVelocities = getWheelVelocityFromRobotCmd(velCmd.linear, velCmd.angular);     
- *//*       rightWheelData.target_velocity = jointVelocityToMotorVelocity(wheelVelocities.first);
-      leftWheelData.target_velocity = jointVelocityToMotorVelocity(wheelVelocities.second); */
-            rightWheelData.target_velocity = 75;
-      leftWheelData.target_velocity = 75;
-      //std::cout << "Target: " << leftWheelData.target_velocity << std::endl;
-    }
-    else
-    {
-      rightWheelData.target_velocity = 0;
-      leftWheelData.target_velocity = 0;
-    }
-    
-    shMemHandler.lockSem();
-    shMemHandler.sendEcDataObject({ rightWheelData, leftWheelData });
-    bool couldFreeSem = shMemHandler.freeSem();
-    }
-    else
-    {
-      std::cout << "COuld not get lock on sem " << std::endl;
-      printf("%s\n", strerror(errno));
-    }
-/*     odomFuture.wait();
-    rosDataPtr->odometry = odomFuture.get(); */
-
+    /*     odomFuture.wait();
+        rosDataPtr->odometry = odomFuture.get(); */
 
     std::this_thread::sleep_for(2ms);
   }
