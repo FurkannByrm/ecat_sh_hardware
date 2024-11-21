@@ -148,6 +148,7 @@ int main(int argc, char** argv)
     // timepoint currentTime = std::chrono::high_resolution_clock::now();
     if (sharedMemoryHandler.lock())
     {
+      std::cout << "Got lock\n";
       // dataPackage[0] := right wheel
       auto& rightWheelShData = sharedMemoryHandler.getDataPtr()[0];
 
@@ -192,27 +193,28 @@ int main(int argc, char** argv)
 
       bool driversEnabled = (rightWheelStateHandler.isOperational && leftWheelStateHandler.isOperational);
 
-      /*     rosSyncMutex.lock();
+          rosSyncMutex.lock();
           VelocityCommand velCmd = *velCommandPtr;
-          rosSyncMutex.unlock(); */
+          rosSyncMutex.unlock();
 
       // If all slaves are operational, write commands:
       if (driversEnabled)
       {
         // Get data from ROS
 
-        /*       auto wheelVelocities = getWheelVelocityFromRobotCmd(velCmd.linear, velCmd.angular);
-         *//*       rightWheelData.target_velocity = jointVelocityToMotorVelocity(wheelVelocities.first);
-      leftWheelData.target_velocity = jointVelocityToMotorVelocity(wheelVelocities.second); */
-        rightWheelData.target_velocity = 0;
-        leftWheelData.target_velocity = 0;
+      auto wheelVelocities = getWheelVelocityFromRobotCmd(velCmd.linear, velCmd.angular);
+      rightWheelData.target_velocity = jointVelocityToMotorVelocity(wheelVelocities.first);
+      leftWheelData.target_velocity = jointVelocityToMotorVelocity(wheelVelocities.second);
+        rightWheelShData.target_velocity = rightWheelData.target_velocity;
+        leftWheelShData.target_velocity = leftWheelData.target_velocity;
         // std::cout << "Target: " << leftWheelData.target_velocity << std::endl;
       }
       else
       {
-        rightWheelData.target_velocity = 0;
-        leftWheelData.target_velocity = 0;
+        rightWheelShData.target_velocity = 0;
+        leftWheelShData.target_velocity = 0;
       }
+      sharedMemoryHandler.unlock();
     }
     /*     odomFuture.wait();
         rosDataPtr->odometry = odomFuture.get(); */

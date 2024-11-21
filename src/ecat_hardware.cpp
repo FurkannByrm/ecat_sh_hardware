@@ -53,8 +53,12 @@ struct IoChannelOffsets
   uint channel16;
 };
 
+using IoChannelBitPositions = IoChannelOffsets;
+
 IoChannelOffsets digitalOutputOffsets;
+IoChannelBitPositions digitalOutputBitPosition;
 IoChannelOffsets digitalInputOffsets;
+IoChannelBitPositions digitalInputBitPosition;
 
 /*
 const ec_pdo_entry_reg_t lifterDomainRegistries[] = {
@@ -196,69 +200,69 @@ const ec_pdo_entry_reg_t domainRegistries[] = {
   { SLAVE_ALIAS, SLAVE_START_POSITION + 1, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x606C, 0x00,
     &LeftMotorEthercatDataOffsets.current_velocity },
   { DIGITAL_INPUT_ALIAS, DIGITAL_INPUT_START_POSITION, DIGITAL_INPUT_VENDOR_ID, DIGITAL_INPUT_PRODUCT_ID, 0x6000, 0x01,
-    &digitalInputOffsets.channel1 },
+    &digitalInputOffsets.channel1, &digitalInputBitPosition.channel1 },
   { DIGITAL_INPUT_ALIAS, DIGITAL_INPUT_START_POSITION, DIGITAL_INPUT_VENDOR_ID, DIGITAL_INPUT_PRODUCT_ID, 0x6010, 0x01,
-    &digitalInputOffsets.channel2 },
+    &digitalInputOffsets.channel2, &digitalInputBitPosition.channel2 },
   { DIGITAL_INPUT_ALIAS, DIGITAL_INPUT_START_POSITION, DIGITAL_INPUT_VENDOR_ID, DIGITAL_INPUT_PRODUCT_ID, 0x6020, 0x01,
-    &digitalInputOffsets.channel3 },
+    &digitalInputOffsets.channel3, &digitalInputBitPosition.channel3 },
   { DIGITAL_INPUT_ALIAS, DIGITAL_INPUT_START_POSITION, DIGITAL_INPUT_VENDOR_ID, DIGITAL_INPUT_PRODUCT_ID, 0x6030, 0x01,
-    &digitalInputOffsets.channel4 },
+    &digitalInputOffsets.channel4, &digitalInputBitPosition.channel4 },
   { DIGITAL_INPUT_ALIAS, DIGITAL_INPUT_START_POSITION, DIGITAL_INPUT_VENDOR_ID, DIGITAL_INPUT_PRODUCT_ID, 0x6040, 0x01,
-    &digitalInputOffsets.channel5 },
+    &digitalInputOffsets.channel5, &digitalInputBitPosition.channel5 },
   { DIGITAL_INPUT_ALIAS, DIGITAL_INPUT_START_POSITION, DIGITAL_INPUT_VENDOR_ID, DIGITAL_INPUT_PRODUCT_ID, 0x6050, 0x01,
-    &digitalInputOffsets.channel6 },
+    &digitalInputOffsets.channel6, &digitalInputBitPosition.channel6 },
   { DIGITAL_INPUT_ALIAS, DIGITAL_INPUT_START_POSITION, DIGITAL_INPUT_VENDOR_ID, DIGITAL_INPUT_PRODUCT_ID, 0x6060, 0x01,
-    &digitalInputOffsets.channel7 },
+    &digitalInputOffsets.channel7, &digitalInputBitPosition.channel7 },
   { DIGITAL_INPUT_ALIAS, DIGITAL_INPUT_START_POSITION, DIGITAL_INPUT_VENDOR_ID, DIGITAL_INPUT_PRODUCT_ID, 0x6070, 0x01,
-    &digitalInputOffsets.channel8 },
+    &digitalInputOffsets.channel8, &digitalInputBitPosition.channel8 },
   { DIGITAL_INPUT_ALIAS, DIGITAL_INPUT_START_POSITION, DIGITAL_INPUT_VENDOR_ID, DIGITAL_INPUT_PRODUCT_ID, 0x6080, 0x01,
-    &digitalInputOffsets.channel9 },
+    &digitalInputOffsets.channel9, &digitalInputBitPosition.channel9 },
   { DIGITAL_INPUT_ALIAS, DIGITAL_INPUT_START_POSITION, DIGITAL_INPUT_VENDOR_ID, DIGITAL_INPUT_PRODUCT_ID, 0x6090, 0x01,
-    &digitalInputOffsets.channel10 },
+    &digitalInputOffsets.channel10, &digitalInputBitPosition.channel10 },
   { DIGITAL_INPUT_ALIAS, DIGITAL_INPUT_START_POSITION, DIGITAL_INPUT_VENDOR_ID, DIGITAL_INPUT_PRODUCT_ID, 0x60a0, 0x01,
-    &digitalInputOffsets.channel11 },
+    &digitalInputOffsets.channel11, &digitalInputBitPosition.channel11 },
   { DIGITAL_INPUT_ALIAS, DIGITAL_INPUT_START_POSITION, DIGITAL_INPUT_VENDOR_ID, DIGITAL_INPUT_PRODUCT_ID, 0x60b0, 0x01,
-    &digitalInputOffsets.channel12 },
+    &digitalInputOffsets.channel12, &digitalInputBitPosition.channel12 },
   { DIGITAL_INPUT_ALIAS, DIGITAL_INPUT_START_POSITION, DIGITAL_INPUT_VENDOR_ID, DIGITAL_INPUT_PRODUCT_ID, 0x60c0, 0x01,
-    &digitalInputOffsets.channel13 },
+    &digitalInputOffsets.channel13, &digitalInputBitPosition.channel13 },
   { DIGITAL_INPUT_ALIAS, DIGITAL_INPUT_START_POSITION, DIGITAL_INPUT_VENDOR_ID, DIGITAL_INPUT_PRODUCT_ID, 0x60d0, 0x01,
-    &digitalInputOffsets.channel14 },
+    &digitalInputOffsets.channel14, &digitalInputBitPosition.channel14 },
   { DIGITAL_INPUT_ALIAS, DIGITAL_INPUT_START_POSITION, DIGITAL_INPUT_VENDOR_ID, DIGITAL_INPUT_PRODUCT_ID, 0x60e0, 0x01,
-    &digitalInputOffsets.channel15 },
+    &digitalInputOffsets.channel15, &digitalInputBitPosition.channel15 },
   { DIGITAL_INPUT_ALIAS, DIGITAL_INPUT_START_POSITION, DIGITAL_INPUT_VENDOR_ID, DIGITAL_INPUT_PRODUCT_ID, 0x60f0, 0x01,
-    &digitalInputOffsets.channel16 },
+    &digitalInputOffsets.channel16, &digitalInputBitPosition.channel16 },
   { DIGITAL_OUTPUT_ALIAS, DIGITAL_OUTPUT_START_POSITION, DIGITAL_OUTPUT_VENDOR_ID, DIGITAL_OUTPUT_PRODUCT_ID, 0x7000,
-    0x01, &digitalOutputOffsets.channel1 },
+    0x01, &digitalOutputOffsets.channel1, &digitalInputBitPosition.channel1 },
   { DIGITAL_OUTPUT_ALIAS, DIGITAL_OUTPUT_START_POSITION, DIGITAL_OUTPUT_VENDOR_ID, DIGITAL_OUTPUT_PRODUCT_ID, 0x7010,
-    0x01, &digitalOutputOffsets.channel2 },
+    0x01, &digitalOutputOffsets.channel2, &digitalInputBitPosition.channel2 },
   { DIGITAL_OUTPUT_ALIAS, DIGITAL_OUTPUT_START_POSITION, DIGITAL_OUTPUT_VENDOR_ID, DIGITAL_OUTPUT_PRODUCT_ID, 0x7020,
-    0x01, &digitalOutputOffsets.channel3 },
+    0x01, &digitalOutputOffsets.channel3, &digitalInputBitPosition.channel3 },
   { DIGITAL_OUTPUT_ALIAS, DIGITAL_OUTPUT_START_POSITION, DIGITAL_OUTPUT_VENDOR_ID, DIGITAL_OUTPUT_PRODUCT_ID, 0x7030,
-    0x01, &digitalOutputOffsets.channel4 },
+    0x01, &digitalOutputOffsets.channel4, &digitalInputBitPosition.channel4 },
   { DIGITAL_OUTPUT_ALIAS, DIGITAL_OUTPUT_START_POSITION, DIGITAL_OUTPUT_VENDOR_ID, DIGITAL_OUTPUT_PRODUCT_ID, 0x7040,
-    0x01, &digitalOutputOffsets.channel5 },
+    0x01, &digitalOutputOffsets.channel5, &digitalInputBitPosition.channel5 },
   { DIGITAL_OUTPUT_ALIAS, DIGITAL_OUTPUT_START_POSITION, DIGITAL_OUTPUT_VENDOR_ID, DIGITAL_OUTPUT_PRODUCT_ID, 0x7050,
-    0x01, &digitalOutputOffsets.channel6 },
+    0x01, &digitalOutputOffsets.channel6, &digitalInputBitPosition.channel6 },
   { DIGITAL_OUTPUT_ALIAS, DIGITAL_OUTPUT_START_POSITION, DIGITAL_OUTPUT_VENDOR_ID, DIGITAL_OUTPUT_PRODUCT_ID, 0x7060,
-    0x01, &digitalOutputOffsets.channel7 },
+    0x01, &digitalOutputOffsets.channel7, &digitalInputBitPosition.channel7 },
   { DIGITAL_OUTPUT_ALIAS, DIGITAL_OUTPUT_START_POSITION, DIGITAL_OUTPUT_VENDOR_ID, DIGITAL_OUTPUT_PRODUCT_ID, 0x7070,
-    0x01, &digitalOutputOffsets.channel8 },
+    0x01, &digitalOutputOffsets.channel8, &digitalInputBitPosition.channel8 },
   { DIGITAL_OUTPUT_ALIAS, DIGITAL_OUTPUT_START_POSITION, DIGITAL_OUTPUT_VENDOR_ID, DIGITAL_OUTPUT_PRODUCT_ID, 0x7080,
-    0x01, &digitalOutputOffsets.channel9 },
+    0x01, &digitalOutputOffsets.channel9, &digitalInputBitPosition.channel8 },
   { DIGITAL_OUTPUT_ALIAS, DIGITAL_OUTPUT_START_POSITION, DIGITAL_OUTPUT_VENDOR_ID, DIGITAL_OUTPUT_PRODUCT_ID, 0x7090,
-    0x01, &digitalOutputOffsets.channel10 },
+    0x01, &digitalOutputOffsets.channel10, &digitalInputBitPosition.channel10 },
   { DIGITAL_OUTPUT_ALIAS, DIGITAL_OUTPUT_START_POSITION, DIGITAL_OUTPUT_VENDOR_ID, DIGITAL_OUTPUT_PRODUCT_ID, 0x70a0,
-    0x01, &digitalOutputOffsets.channel11 },
+    0x01, &digitalOutputOffsets.channel11, &digitalInputBitPosition.channel11 },
   { DIGITAL_OUTPUT_ALIAS, DIGITAL_OUTPUT_START_POSITION, DIGITAL_OUTPUT_VENDOR_ID, DIGITAL_OUTPUT_PRODUCT_ID, 0x70b0,
-    0x01, &digitalOutputOffsets.channel12 },
+    0x01, &digitalOutputOffsets.channel12, &digitalInputBitPosition.channel12 },
   { DIGITAL_OUTPUT_ALIAS, DIGITAL_OUTPUT_START_POSITION, DIGITAL_OUTPUT_VENDOR_ID, DIGITAL_OUTPUT_PRODUCT_ID, 0x70c0,
-    0x01, &digitalOutputOffsets.channel13 },
+    0x01, &digitalOutputOffsets.channel13, &digitalInputBitPosition.channel13 },
   { DIGITAL_OUTPUT_ALIAS, DIGITAL_OUTPUT_START_POSITION, DIGITAL_OUTPUT_VENDOR_ID, DIGITAL_OUTPUT_PRODUCT_ID, 0x70d0,
-    0x01, &digitalOutputOffsets.channel14 },
+    0x01, &digitalOutputOffsets.channel14, &digitalInputBitPosition.channel14 },
   { DIGITAL_OUTPUT_ALIAS, DIGITAL_OUTPUT_START_POSITION, DIGITAL_OUTPUT_VENDOR_ID, DIGITAL_OUTPUT_PRODUCT_ID, 0x70e0,
-    0x01, &digitalOutputOffsets.channel15 },
+    0x01, &digitalOutputOffsets.channel15, &digitalInputBitPosition.channel15 },
   { DIGITAL_OUTPUT_ALIAS, DIGITAL_OUTPUT_START_POSITION, DIGITAL_OUTPUT_VENDOR_ID, DIGITAL_OUTPUT_PRODUCT_ID, 0x70f0,
-    0x01, &digitalOutputOffsets.channel16 },
+    0x01, &digitalOutputOffsets.channel16, &digitalInputBitPosition.channel16 },
   {}
 };
 
@@ -477,24 +481,28 @@ int main(int argc, char** argv)
 
     if (sharedMemoryHandler.tryLock())
     {
+      std::cout << "Got lock\n";
       auto& rightWheelShData = sharedMemoryHandler.getDataPtr()[0];
-      rightWheelData.status_word = rightWheelShData.status_word;
-      rightWheelData.current_position = rightWheelShData.current_position;
-      rightWheelData.current_velocity = rightWheelShData.current_velocity;
+      rightWheelShData.status_word = rightWheelData.status_word;
+      rightWheelShData.current_position = rightWheelData.current_position;
+      rightWheelShData.current_velocity = rightWheelData.current_velocity;
 
       rightWheelData.control_word = rightWheelShData.control_word;
       rightWheelData.target_position = rightWheelShData.target_position;
       rightWheelData.target_velocity = rightWheelShData.target_velocity;
 
       auto& leftWheelShData = sharedMemoryHandler.getDataPtr()[1];
-      leftWheelData.status_word = leftWheelShData.status_word;
-      leftWheelData.current_position = leftWheelShData.current_position;
-      leftWheelData.current_velocity = leftWheelShData.current_velocity;
+      leftWheelShData.status_word = leftWheelData.status_word;
+      leftWheelShData.current_position = leftWheelData.current_position;
+      leftWheelShData.current_velocity = leftWheelData.current_velocity;
+      //leftWheelData.status_word = leftWheelShData.status_word;
+      //leftWheelData.current_position = leftWheelShData.current_position;
+      //leftWheelData.current_velocity = leftWheelShData.current_velocity;
 
       leftWheelData.control_word = leftWheelShData.control_word;
       leftWheelData.target_position = leftWheelShData.target_position;
       leftWheelData.target_velocity = leftWheelShData.target_velocity;
-
+ 
       sharedMemoryHandler.unlock();
     }
 
