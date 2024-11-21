@@ -37,7 +37,7 @@ std::optional<T> readFromSlave(uint8_t *domainDataPtr, uint object_offset, uint 
     return EC_READ_S64(data);
   }
   else if constexpr (std::is_same_v<bool, T>){
-    return EC_READ_BIT(data, bit_position)
+    return EC_READ_BIT(data, bit_position);
   }
 
   return std::nullopt;
@@ -71,7 +71,7 @@ write according to the template argument.
     EC_WRITE_S64(data, new_val);
   }
   else if constexpr (std::is_same_v<bool, T>){
-    EC_WRITE_BIT(data, bit_position, new_val)
+    EC_WRITE_BIT(data, bit_position, new_val);
   }
 }
 
