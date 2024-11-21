@@ -13,7 +13,7 @@
 #include <errno.h>
 
 template <typename T>
-std::optional<T> readFromSlave(uint8_t *domainDataPtr, uint object_offset) {
+std::optional<T> readFromSlave(uint8_t *domainDataPtr, uint object_offset, uint bit_position = 0) {
   // auto data = m_DomainProcessDataPtr +
   // *m_SlaveOffsets->getData(value_to_read_name);
 
@@ -36,13 +36,16 @@ std::optional<T> readFromSlave(uint8_t *domainDataPtr, uint object_offset) {
   } else if constexpr (std::is_same_v<int64_t, T>) {
     return EC_READ_S64(data);
   }
+  else if constexpr (std::is_same_v<bool, T>){
+    return EC_READ_BIT(data, bit_position)
+  }
 
   return std::nullopt;
 }
 
 template <typename T>
 void writeToSlave(uint8_t *domainDataPtr, uint object_offset,
-                  const T &new_val) {
+                  const T &new_val, uint bit_position = 0) {
 
   auto data = domainDataPtr + object_offset;
   /*
@@ -66,6 +69,9 @@ write according to the template argument.
     EC_WRITE_S32(data, new_val);
   } else if constexpr (std::is_same_v<int64_t, T>) {
     EC_WRITE_S64(data, new_val);
+  }
+  else if constexpr (std::is_same_v<bool, T>){
+    EC_WRITE_BIT(data, bit_position, new_val)
   }
 }
 

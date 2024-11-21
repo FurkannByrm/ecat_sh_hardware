@@ -413,6 +413,7 @@ int main(int argc, char** argv)
   timespec startTime;
   timespec lastStartTime = startTime;
   clock_gettime(CLOCK_MONOTONIC, &startTime);
+  int bit_test_counter = 0;
   while (runHardwareLoop)
   {
     // DC sync
@@ -513,7 +514,10 @@ int main(int argc, char** argv)
     writeToSlave(domainProcessData, LeftMotorEthercatDataOffsets.control_word, leftWheelData.control_word);
     writeToSlave(domainProcessData, LeftMotorEthercatDataOffsets.operation_mode, leftWheelData.operation_mode);
     writeToSlave(domainProcessData, LeftMotorEthercatDataOffsets.target_velocity, leftWheelData.target_velocity);
-
+    writeToSlave(domainProcessData, digitalOutputOffsets.channel1, (bool)bit_test_counter, digitalOutputBitPosition.channel1);
+    
+    bit_test_counter = !bit_test_counter;
+    
     clock_gettime(CLOCK_MONOTONIC, &distributedClockHelper.currentTime);
     if (distributedClockHelper.referenceClockCounter)
     {
