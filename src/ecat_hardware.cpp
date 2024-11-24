@@ -525,18 +525,6 @@ int main(int argc, char** argv)
     writeToSlave(domainProcessData, LeftMotorEthercatDataOffsets.control_word, leftWheelData.control_word);
     writeToSlave(domainProcessData, LeftMotorEthercatDataOffsets.operation_mode, leftWheelData.operation_mode);
     writeToSlave(domainProcessData, LeftMotorEthercatDataOffsets.target_velocity, leftWheelData.target_velocity);
-    if(dig_out_count == 500)
-    {
-      std::cout << "Resetting digital output counter" << std::endl;
-      bit_test_counter = !bit_test_counter;
-      writeToSlave(domainProcessData, digitalOutputOffsets.channel1, bit_test_counter, digitalOutputBitPosition.channel1);
-      
-      dig_out_count = 0;
-    }
-    else
-    {
-      dig_out_count += 1;
-    }
     
     
     clock_gettime(CLOCK_MONOTONIC, &distributedClockHelper.currentTime);
