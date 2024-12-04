@@ -62,17 +62,18 @@ void ros_communication(std::atomic<bool>& shutdown_requested, std::mutex& ros_sy
 
   std::shared_ptr<rclcpp::Subscription<geometry_msgs::msg::TwistStamped>> velCommandSub =
       controllerNode->create_subscription<geometry_msgs::msg::TwistStamped>(
-          "/diff_drive_controller/velocity_command", rclcpp::SystemDefaultsQoS(),
+          "/cmd_vel", rclcpp::SystemDefaultsQoS(),
           [&velCmdQueue](std::shared_ptr<geometry_msgs::msg::TwistStamped> vel_cmd) {
             // Push to command queue
             velCmdQueue.push(*vel_cmd);
           });
   std::shared_ptr<rclcpp::Publisher<nav_msgs::msg::Odometry>> odomPub =
-      controllerNode->create_publisher<nav_msgs::msg::Odometry>("/diff_drive_controller/odometry",
+  controllerNode->create_publisher<nav_msgs::msg::Odometry>("/odom",
                                                                 rclcpp::SystemDefaultsQoS());
   auto cleanupRosMembers = [&]() -> void {
     velCommandSub.reset();
     odomPub.reset();
+    controllerNode.reset();
   };
   rclcpp::executors::SingleThreadedExecutor exec;
   exec.add_node(controllerNode);
@@ -90,23 +91,23 @@ void ros_communication(std::atomic<bool>& shutdown_requested, std::mutex& ros_sy
     if (!velCmdQueue.empty())
     {
 
-/*       if ((timeElapsedSinceLatestUpdate <= velocityCommandTimeout))
+      if ((timeElapsedSinceLatestUpdate <= velocityCommandTimeout))
       {
         auto currCommand = velCmdQueue.front().twist;
-        std::cout << velCmdQueue.size() << std::endl;
         *command_ptr = { currCommand.linear.x, currCommand.angular.z };  
-      } */
-              auto currCommand = velCmdQueue.front().twist;
+      }
+      auto currCommand = velCmdQueue.front().twist;
         
-        *command_ptr = { currCommand.linear.x, currCommand.angular.z };  
+      *command_ptr = { currCommand.linear.x, currCommand.angular.z };  
       velCmdQueue.pop();
     }
-    else
-    {
-      *command_ptr = {0.0, 0.0};
-    }
+    //else
+    //{
+    //  *command_ptr = {0.0, 0.0};
+    //}
     rosData = *data;
     ros_sync_mutex.unlock();
+    
     toRosOdom(rosData.odometry, odomMsg);
 
     odomMsg.header.stamp = currentTime;
@@ -115,6 +116,7 @@ void ros_communication(std::atomic<bool>& shutdown_requested, std::mutex& ros_sy
     previousUpdateTime = currentTime;
     rate.sleep();
   }
+
 
   cleanupRosMembers();
 

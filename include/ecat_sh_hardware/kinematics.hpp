@@ -15,12 +15,13 @@
 #include <chrono>
 #include <bits/stl_pair.h>
 #include <math.h>
+#include <iostream>
 
 using timepoint = std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<double, std::ratio<1>>>;
 
 constexpr auto WHEEL_POSITION_INCREMENT = 16384.0;
-constexpr auto WHEEL_RADIUS = 0.105;
-constexpr auto WHEEL_SEPERATION = 0.457;
+constexpr auto WHEEL_RADIUS = 0.10;
+constexpr auto WHEEL_SEPERATION = 0.45;
 constexpr auto WHEEL_TO_MOTOR_REDUCTION = 24.685;
 
 struct WheelParams
@@ -44,6 +45,11 @@ struct Odometry
   timepoint previousUpdateTime;
 
   Odometry()
+    : linearVel(0),
+      angularVel(0),
+      x(0),
+      y(0),
+      heading(0)
   {
   }
 
@@ -54,6 +60,7 @@ struct Odometry
     this->x = other.x;
     this->y = other.y;
     this->heading = other.heading;
+    this->previousUpdateTime = other.previousUpdateTime;
   }
   Odometry& operator=(const Odometry& other)
   {
@@ -62,6 +69,7 @@ struct Odometry
     this->x = other.x;
     this->y = other.y;
     this->heading = other.heading;
+    this->previousUpdateTime = other.previousUpdateTime;
     return *this;
   }
 
@@ -72,6 +80,7 @@ struct Odometry
     this->x = other.x;
     this->y = other.y;
     this->heading = other.heading;
+    this->previousUpdateTime = other.previousUpdateTime;
   }
 
   void reset();
@@ -106,7 +115,24 @@ inline const int32_t jointPositionToMotorPosition(const double& joint_position)
   return joint_position * coe;
 }
 
-/**
+inline const int32_t jointLinearVelToMotorVel_BHF(const double& joint_vel_lin)
+{
+  constexpr auto numerator = 60.0 * 16.0 * 268435.0;
+  constexpr auto denum = M_PI * 0.2 * 21.0;
+  return (joint_vel_lin*numerator) / denum;
+}
+
+
+inline double motorVelToLinearVel_BHFF(int32_t driver_vel)
+{
+
+  constexpr double numerator =  M_PI * 0.2 * 21.0; 
+  constexpr double denum = 60.0 * 16.0 * 268435.0;
+
+  return (double(driver_vel)*numerator) / denum;
+}
+
+/**https://github.com/AltinayGrass/servo_tst/blob/master/servo_joy.c
  * @brief Turns the joints current angular velocity, calculated from the motors RPM.
  *
  * @param motor_velocity RPM

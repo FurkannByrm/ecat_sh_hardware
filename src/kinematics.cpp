@@ -15,9 +15,10 @@ Odometry Odometry::update(double left_wheel_vel, double right_wheel_vel, const t
 {
 
   const double linearVelBody = 0.5 * (left_wheel_vel + right_wheel_vel);
-
-  const double angularVelBody = (right_wheel_vel - left_wheel_vel) / wheelParams.wheel_seperation;
-  const auto dt = (update_time - previousUpdateTime).count();
+  const double angularVelBody = (right_wheel_vel - left_wheel_vel) / 0.45;
+  /* std::cout << "Lin: " << linearVelBody << " ang; " << angularVelBody << std::endl; */
+  const double dt = (update_time - previousUpdateTime).count();
+  previousUpdateTime = update_time;
   if(angularVelBody <= 0.0001) // 2nd order Runge-Kutta integration:
   {
     
@@ -33,10 +34,10 @@ Odometry Odometry::update(double left_wheel_vel, double right_wheel_vel, const t
     x += linearVelToAngularVelRatio * (std::sin(heading) - std::sin(oldHeading));
     y += linearVelToAngularVelRatio * (std::cos(heading) - std::cos(oldHeading));
   }
+
+  std::cout << x << std::endl;
   
   // TODO: Use Rolling Window Accumulation for velocities??
-
-  previousUpdateTime = update_time;
 
   return *this;
 

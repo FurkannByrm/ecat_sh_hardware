@@ -6,11 +6,12 @@
 #include <unordered_map>
 #include <signal.h>
 #include <iostream>
+#include <thread>
 
-constexpr auto SLAVE_START_POSITION = 0;
+constexpr auto SLAVE_START_POSITION = 1;
 constexpr auto SLAVE_ALIAS = 0;
-constexpr auto SLAVE_VENDOR_ID = 0x000000fb;
-constexpr auto SLAVE_PRODUCT_ID = 0x65520000;
+constexpr auto SLAVE_VENDOR_ID = 0x00000002;
+constexpr auto SLAVE_PRODUCT_ID = 0x1c353052;
 struct
 {
   uint control_word;
@@ -33,7 +34,71 @@ struct
   uint current_velocity;
 } RightMotorEthercatDataOffsets;
 
-struct IoChannelOffsets
+ec_pdo_entry_info_t right_motor_pdo_entries[] = { { 0x6040, 0x00, 16 }, { 0x60ff, 0x00, 32 }, { 0x6060, 0x00, 8 }, 
+                                                  { 0x6041, 0x00, 16 }, { 0x6064, 0x00, 32 }, { 0x606c, 0x00, 32 } };
+
+ec_pdo_info_t right_motor_pdo_info[] = {
+  {0x1600, 1, right_motor_pdo_entries + 0},
+  {0x1601, 1, right_motor_pdo_entries + 1},
+  {0x1608, 1, right_motor_pdo_entries + 2},
+  {0x1a00, 1, right_motor_pdo_entries + 3},
+  {0x1a01, 1, right_motor_pdo_entries + 4},
+  {0x1a02, 1, right_motor_pdo_entries + 5}
+};
+
+ec_sync_info_t right_motor_slave_syncs[] = { { 0, EC_DIR_OUTPUT, 0, NULL, EC_WD_DISABLE },
+                                             { 1, EC_DIR_INPUT, 0, NULL, EC_WD_DISABLE },
+                                             { 2, EC_DIR_OUTPUT, 3, right_motor_pdo_info + 0, EC_WD_DISABLE },
+                                             { 3, EC_DIR_INPUT, 3, right_motor_pdo_info + 3, EC_WD_DISABLE },
+                                             { 0xff } };
+
+ec_pdo_entry_info_t left_motor_pdo_entries[] = { { 0x6040, 0x00, 16 }, { 0x60ff, 0x00, 32 }, { 0x6060, 0x00, 8 }, 
+                                                  { 0x6041, 0x00, 16 }, { 0x6064, 0x00, 32 }, { 0x606c, 0x00, 32 } };
+
+ec_pdo_info_t left_motor_pdo_info[] = {
+  {0x1600, 1, left_motor_pdo_entries + 0},
+  {0x1601, 1, left_motor_pdo_entries + 1},
+  {0x1608, 1, left_motor_pdo_entries + 2},
+  {0x1a00, 1, left_motor_pdo_entries + 3},
+  {0x1a01, 1, left_motor_pdo_entries + 4},
+  {0x1a02, 1, left_motor_pdo_entries + 5}
+};
+
+ec_sync_info_t left_motor_slave_syncs[] = { { 0, EC_DIR_OUTPUT, 0, NULL, EC_WD_DISABLE },
+                                            { 1, EC_DIR_INPUT, 0, NULL, EC_WD_DISABLE },
+                                            { 2, EC_DIR_OUTPUT, 3, left_motor_pdo_info + 0, EC_WD_DISABLE },
+                                            { 3, EC_DIR_INPUT, 3, left_motor_pdo_info + 3, EC_WD_DISABLE },
+                                            { 0xff } };
+
+const ec_pdo_entry_reg_t domainRegistries[] = {
+  { SLAVE_ALIAS, SLAVE_START_POSITION, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6040, 0x00,
+    &RightMotorEthercatDataOffsets.control_word },
+  { SLAVE_ALIAS, SLAVE_START_POSITION, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x60ff, 0x00,
+    &RightMotorEthercatDataOffsets.target_velocity },
+      { SLAVE_ALIAS, SLAVE_START_POSITION, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6060, 0x00,
+    &RightMotorEthercatDataOffsets.operation_mode },
+  { SLAVE_ALIAS, SLAVE_START_POSITION, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6041, 0x00,
+    &RightMotorEthercatDataOffsets.status_word },
+  { SLAVE_ALIAS, SLAVE_START_POSITION, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6064, 0x00,
+    &RightMotorEthercatDataOffsets.current_position },
+  { SLAVE_ALIAS, SLAVE_START_POSITION, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x606C, 0x00,
+    &RightMotorEthercatDataOffsets.current_velocity },
+  { SLAVE_ALIAS, SLAVE_START_POSITION + 1, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6040, 0x00,
+    &LeftMotorEthercatDataOffsets.control_word },
+  { SLAVE_ALIAS, SLAVE_START_POSITION + 1, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x60ff, 0x00,
+    &LeftMotorEthercatDataOffsets.target_velocity },
+      { SLAVE_ALIAS, SLAVE_START_POSITION + 1, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6060, 0x00,
+    &LeftMotorEthercatDataOffsets.operation_mode },
+  { SLAVE_ALIAS, SLAVE_START_POSITION + 1, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6041, 0x00,
+    &LeftMotorEthercatDataOffsets.status_word },
+  { SLAVE_ALIAS, SLAVE_START_POSITION + 1, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6064, 0x00,
+    &LeftMotorEthercatDataOffsets.current_position },
+  { SLAVE_ALIAS, SLAVE_START_POSITION + 1, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x606C, 0x00,
+    &LeftMotorEthercatDataOffsets.current_velocity },
+  {}
+};
+
+/* struct IoChannelOffsets
 {
   uint channel1;
   uint channel2;
@@ -59,24 +124,6 @@ IoChannelOffsets digitalOutputOffsets;
 IoChannelBitPositions digitalOutputBitPosition;
 IoChannelOffsets digitalInputOffsets;
 IoChannelBitPositions digitalInputBitPosition;
-
-/*
-const ec_pdo_entry_reg_t lifterDomainRegistries[] = {
-    {SLAVE_START_POSITION, SLAVE_ALIAS, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID,
-     0x6040, 0x00, &EthercatDataOffsets.control_word},
-    {SLAVE_START_POSITION, SLAVE_ALIAS, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID,
-     0x6060, 0x00, &EthercatDataOffsets.operation_mode},
-    {SLAVE_START_POSITION, SLAVE_ALIAS, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID,
-     0x607a, 0x00, &EthercatDataOffsets.target_position},
-    {SLAVE_START_POSITION, SLAVE_ALIAS, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID,
-     0x60ff, 0x0, &EthercatDataOffsets.target_velocity},
-    {SLAVE_START_POSITION, SLAVE_ALIAS, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID,
-     0x6041, 0x0, &EthercatDataOffsets.status_word},
-    {SLAVE_START_POSITION, SLAVE_ALIAS, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID,
-     0x6064, 0x0, &EthercatDataOffsets.current_position},
-    {SLAVE_START_POSITION, SLAVE_ALIAS, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID,
-     0x606C, 0x0, &EthercatDataOffsets.current_velocity},
-    {}};*/
 
 ec_pdo_entry_info_t right_motor_pdo_entries[] = { { 0x6040, 0x00, 16 }, { 0x6060, 0x00, 8 },  { 0x607a, 0x00, 32 },
                                                   { 0x60ff, 0x00, 32 }, { 0x6041, 0x00, 16 }, { 0x6064, 0x00, 32 },
@@ -116,22 +163,22 @@ ec_pdo_entry_info_t digital_input_pdo_entries[] = {
 };
 
 ec_pdo_info_t digital_input_pdos[] = {
-  { 0x1a00, 1, digital_input_pdo_entries + 0 },  /* Channel 1 */
-  { 0x1a01, 1, digital_input_pdo_entries + 1 },  /* Channel 2 */
-  { 0x1a02, 1, digital_input_pdo_entries + 2 },  /* Channel 3 */
-  { 0x1a03, 1, digital_input_pdo_entries + 3 },  /* Channel 4 */
-  { 0x1a04, 1, digital_input_pdo_entries + 4 },  /* Channel 5 */
-  { 0x1a05, 1, digital_input_pdo_entries + 5 },  /* Channel 6 */
-  { 0x1a06, 1, digital_input_pdo_entries + 6 },  /* Channel 7 */
-  { 0x1a07, 1, digital_input_pdo_entries + 7 },  /* Channel 8 */
-  { 0x1a08, 1, digital_input_pdo_entries + 8 },  /* Channel 9 */
-  { 0x1a09, 1, digital_input_pdo_entries + 9 },  /* Channel 10 */
-  { 0x1a0a, 1, digital_input_pdo_entries + 10 }, /* Channel 11 */
-  { 0x1a0b, 1, digital_input_pdo_entries + 11 }, /* Channel 12 */
-  { 0x1a0c, 1, digital_input_pdo_entries + 12 }, /* Channel 13 */
-  { 0x1a0d, 1, digital_input_pdo_entries + 13 }, /* Channel 14 */
-  { 0x1a0e, 1, digital_input_pdo_entries + 14 }, /* Channel 15 */
-  { 0x1a0f, 1, digital_input_pdo_entries + 15 }, /* Channel 16 */
+  { 0x1a00, 1, digital_input_pdo_entries + 0 }, 
+  { 0x1a01, 1, digital_input_pdo_entries + 1 }, 
+  { 0x1a02, 1, digital_input_pdo_entries + 2 }, 
+  { 0x1a03, 1, digital_input_pdo_entries + 3 }, 
+  { 0x1a04, 1, digital_input_pdo_entries + 4 }, 
+  { 0x1a05, 1, digital_input_pdo_entries + 5 }, 
+  { 0x1a06, 1, digital_input_pdo_entries + 6 }, 
+  { 0x1a07, 1, digital_input_pdo_entries + 7 }, 
+  { 0x1a08, 1, digital_input_pdo_entries + 8 }, 
+  { 0x1a09, 1, digital_input_pdo_entries + 9 }, 
+  { 0x1a0a, 1, digital_input_pdo_entries + 10 },
+  { 0x1a0b, 1, digital_input_pdo_entries + 11 },
+  { 0x1a0c, 1, digital_input_pdo_entries + 12 },
+  { 0x1a0d, 1, digital_input_pdo_entries + 13 },
+  { 0x1a0e, 1, digital_input_pdo_entries + 14 },
+  { 0x1a0f, 1, digital_input_pdo_entries + 15 },
 };
 
 ec_sync_info_t digital_input_syncs[] = { { 0, EC_DIR_INPUT, 16, digital_input_pdos + 0, EC_WD_DISABLE }, { 0xff } };
@@ -149,22 +196,22 @@ ec_pdo_entry_info_t digital_output_pdo_entries[] = {
 };
 
 ec_pdo_info_t digital_output_pdos[] = {
-  { 0x1600, 1, digital_output_pdo_entries + 0 },  /* Channel 1 */
-  { 0x1601, 1, digital_output_pdo_entries + 1 },  /* Channel 2 */
-  { 0x1602, 1, digital_output_pdo_entries + 2 },  /* Channel 3 */
-  { 0x1603, 1, digital_output_pdo_entries + 3 },  /* Channel 4 */
-  { 0x1604, 1, digital_output_pdo_entries + 4 },  /* Channel 5 */
-  { 0x1605, 1, digital_output_pdo_entries + 5 },  /* Channel 6 */
-  { 0x1606, 1, digital_output_pdo_entries + 6 },  /* Channel 7 */
-  { 0x1607, 1, digital_output_pdo_entries + 7 },  /* Channel 8 */
-  { 0x1608, 1, digital_output_pdo_entries + 8 },  /* Channel 9 */
-  { 0x1609, 1, digital_output_pdo_entries + 9 },  /* Channel 10 */
-  { 0x160a, 1, digital_output_pdo_entries + 10 }, /* Channel 11 */
-  { 0x160b, 1, digital_output_pdo_entries + 11 }, /* Channel 12 */
-  { 0x160c, 1, digital_output_pdo_entries + 12 }, /* Channel 13 */
-  { 0x160d, 1, digital_output_pdo_entries + 13 }, /* Channel 14 */
-  { 0x160e, 1, digital_output_pdo_entries + 14 }, /* Channel 15 */
-  { 0x160f, 1, digital_output_pdo_entries + 15 }, /* Channel 16 */
+  { 0x1600, 1, digital_output_pdo_entries + 0 }, 
+  { 0x1601, 1, digital_output_pdo_entries + 1 }, 
+  { 0x1602, 1, digital_output_pdo_entries + 2 }, 
+  { 0x1603, 1, digital_output_pdo_entries + 3 }, 
+  { 0x1604, 1, digital_output_pdo_entries + 4 }, 
+  { 0x1605, 1, digital_output_pdo_entries + 5 }, 
+  { 0x1606, 1, digital_output_pdo_entries + 6 }, 
+  { 0x1607, 1, digital_output_pdo_entries + 7 }, 
+  { 0x1608, 1, digital_output_pdo_entries + 8 }, 
+  { 0x1609, 1, digital_output_pdo_entries + 9 }, 
+  { 0x160a, 1, digital_output_pdo_entries + 10 },
+  { 0x160b, 1, digital_output_pdo_entries + 11 },
+  { 0x160c, 1, digital_output_pdo_entries + 12 },
+  { 0x160d, 1, digital_output_pdo_entries + 13 },
+  { 0x160e, 1, digital_output_pdo_entries + 14 },
+  { 0x160f, 1, digital_output_pdo_entries + 15 },
 
 };
 
@@ -175,8 +222,6 @@ ec_sync_info_t digital_output_syncs[] = {
 };
 
 
-/* ec_sync_info_t digital_output_syncs[] = { { 0, EC_DIR_OUTPUT, 16, digital_output_pdos + 0, EC_WD_ENABLE }, { 0xff } };
- */
 const ec_pdo_entry_reg_t domainRegistries[] = {
   { SLAVE_ALIAS, SLAVE_START_POSITION, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6040, 0x00,
     &RightMotorEthercatDataOffsets.control_word },
@@ -271,7 +316,7 @@ const ec_pdo_entry_reg_t domainRegistries[] = {
   { DIGITAL_OUTPUT_ALIAS, DIGITAL_OUTPUT_START_POSITION, DIGITAL_OUTPUT_VENDOR_ID, DIGITAL_OUTPUT_PRODUCT_ID, 0x70f0,
     0x01, &digitalOutputOffsets.channel16, &digitalOutputBitPosition.channel16 },
   {}
-};
+}; */
 
 bool runHardwareLoop = true;
 
@@ -299,6 +344,8 @@ int main(int argc, char** argv)
     return 1;
   }
 
+  slaveConfigPtr = ecrt_master_slave_config(masterPtr, 0, 0, SLAVE_VENDOR_ID, 0x044c2c52);
+
   // Configure first slave:
   slaveConfigPtr =
       ecrt_master_slave_config(masterPtr, SLAVE_ALIAS, SLAVE_START_POSITION, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID);
@@ -314,7 +361,7 @@ int main(int argc, char** argv)
     return 1;
   }
 
-  ecrt_slave_config_dc(slaveConfigPtr, 0x0300, 2000000, 1000000, 2000000, 0);
+  ecrt_slave_config_dc(slaveConfigPtr, 0x0700, 2000000, 0, 2000000, 0);
 
   // Configure second slave:
 
@@ -327,9 +374,9 @@ int main(int argc, char** argv)
     return 1;
   }
 
-  ecrt_slave_config_dc(slaveConfigPtr, 0x0300, 2000000, 1000000, 2000000, 0);
+  ecrt_slave_config_dc(slaveConfigPtr, 0x0700, 2000000, 0, 2000000, 0);
 
-  slaveConfigPtr = ecrt_master_slave_config(masterPtr, 0, 2, DIGITAL_INPUT_VENDOR_ID, 0x044c2c52);
+  /* slaveConfigPtr = ecrt_master_slave_config(masterPtr, 0, 2, DIGITAL_INPUT_VENDOR_ID, 0x044c2c52);
 
   slaveConfigPtr = ecrt_master_slave_config(masterPtr, DIGITAL_INPUT_ALIAS, DIGITAL_INPUT_START_POSITION,
                                             DIGITAL_INPUT_VENDOR_ID, DIGITAL_INPUT_PRODUCT_ID);
@@ -348,7 +395,7 @@ int main(int argc, char** argv)
   {
     std::cout << "Could not configure digital input PDOs." << std::endl;
     return 1;
-  }
+  } */
 
   int registerDomainEntriesRes = ecrt_domain_reg_pdo_entry_list(domainPtr, domainRegistries);
 
@@ -464,10 +511,10 @@ int main(int argc, char** argv)
       rightWheelData.current_position = rightMotorCurrentPosition.value();
     }
     auto rightMotorCurrentVelocity =
-        readFromSlave<int32_t>(domainProcessData, RightMotorEthercatDataOffsets.current_position);
+        readFromSlave<int32_t>(domainProcessData, RightMotorEthercatDataOffsets.current_velocity);
     if (rightMotorCurrentPosition)
     {
-      rightWheelData.current_position = rightMotorCurrentVelocity.value();
+      rightWheelData.current_velocity = rightMotorCurrentVelocity.value();
     }
 
     auto leftMotorSW = readFromSlave<uint16_t>(domainProcessData, LeftMotorEthercatDataOffsets.status_word);
@@ -483,10 +530,10 @@ int main(int argc, char** argv)
       leftWheelData.current_position = leftMotorCurrentPosition.value();
     }
     auto leftMotorCurrentVelocity =
-        readFromSlave<int32_t>(domainProcessData, LeftMotorEthercatDataOffsets.current_position);
+        readFromSlave<int32_t>(domainProcessData, LeftMotorEthercatDataOffsets.current_velocity);
     if (leftMotorCurrentVelocity)
     {
-      leftWheelData.current_position = leftMotorCurrentVelocity.value();
+      leftWheelData.current_velocity = leftMotorCurrentVelocity.value();
     }
 
     // If we get a lock on the semaphore, read/write from/to EtherCAT:
@@ -502,6 +549,7 @@ int main(int argc, char** argv)
       rightWheelData.control_word = rightWheelShData.control_word;
       rightWheelData.target_position = rightWheelShData.target_position;
       rightWheelData.target_velocity = rightWheelShData.target_velocity;
+/*       rightWheelData.operation_mode = rightWheelShData.operation_mode; */
 
       auto& leftWheelShData = sharedMemoryHandler.getDataPtr()[1];
       leftWheelShData.status_word = leftWheelData.status_word;
@@ -512,6 +560,8 @@ int main(int argc, char** argv)
       //leftWheelData.current_velocity = leftWheelShData.current_velocity;
 
       leftWheelData.control_word = leftWheelShData.control_word;
+      std::cout << "ctrl: " << leftWheelData.control_word << std::endl;
+      /* leftWheelData.operation_mode = leftWheelShData.operation_mode; */
       leftWheelData.target_position = leftWheelShData.target_position;
       leftWheelData.target_velocity = leftWheelShData.target_velocity;
  
@@ -519,11 +569,11 @@ int main(int argc, char** argv)
     }
 
     writeToSlave(domainProcessData, RightMotorEthercatDataOffsets.control_word, rightWheelData.control_word);
-    writeToSlave(domainProcessData, RightMotorEthercatDataOffsets.operation_mode, rightWheelData.operation_mode);
+    writeToSlave(domainProcessData, RightMotorEthercatDataOffsets.operation_mode, 0x09);
     writeToSlave(domainProcessData, RightMotorEthercatDataOffsets.target_velocity, rightWheelData.target_velocity);
 
     writeToSlave(domainProcessData, LeftMotorEthercatDataOffsets.control_word, leftWheelData.control_word);
-    writeToSlave(domainProcessData, LeftMotorEthercatDataOffsets.operation_mode, leftWheelData.operation_mode);
+    writeToSlave(domainProcessData, LeftMotorEthercatDataOffsets.operation_mode, 0x09);
     writeToSlave(domainProcessData, LeftMotorEthercatDataOffsets.target_velocity, leftWheelData.target_velocity);
     
     
@@ -544,6 +594,16 @@ int main(int argc, char** argv)
     ecrt_domain_queue(domainPtr);
     ecrt_master_send(masterPtr);
   }
+
+  writeToSlave(domainProcessData, RightMotorEthercatDataOffsets.target_velocity, 0);
+  writeToSlave(domainProcessData, LeftMotorEthercatDataOffsets.target_velocity, 0);
+
+  ecrt_domain_queue(domainPtr);
+  ecrt_master_send(masterPtr);
+
+  using namespace std::chrono_literals;
+  std::this_thread::sleep_for(10ms);
+
 
   ecrt_release_master(masterPtr);
 
