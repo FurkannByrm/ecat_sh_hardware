@@ -1,0 +1,13 @@
+[Unit]
+Description=
+After=network.target local-fs.target 
+Requires=ethercat.service
+[Service]
+Type=simple
+Restart=no
+#RestartSec=1
+User=root
+EnvironmentFile=-/etc/sysconfig/ecathardware
+ExecStart=
+[Install]
+WantedBy=multi-user.target
