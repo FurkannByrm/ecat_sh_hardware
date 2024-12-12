@@ -1,0 +1,12 @@
+[Unit]
+Description=
+After=ecat_hardware-service
+[Service]
+Type=simple
+Restart=no
+#RestartSec=1
+User=root
+EnvironmentFile=-/etc/sysconfig/ecathardware
+ExecStart=/home/hamal22/ecat_sh_hardware/service/ecat_control-start.sh
+[Install]
+WantedBy=multi-user.target
