@@ -357,7 +357,6 @@ int main(int argc, char** argv)
   int configurePdosRes = ecrt_slave_config_pdos(slaveConfigPtr, EC_END, right_motor_slave_syncs);
   if (configurePdosRes != 0)
   {
-    std::cout << "Could not configure right motor driver PDOs." << std::endl;
     return 1;
   }
 
@@ -370,7 +369,6 @@ int main(int argc, char** argv)
   configurePdosRes = ecrt_slave_config_pdos(slaveConfigPtr, EC_END, left_motor_slave_syncs);
   if (configurePdosRes != 0)
   {
-    std::cout << "Could not configure left motor driver PDOs." << std::endl;
     return 1;
   }
 
@@ -401,7 +399,6 @@ int main(int argc, char** argv)
 
   if (registerDomainEntriesRes != 0)
   {
-    std::cout << "Could not register PDO list." << std::endl;
     return 1;
   }
 
@@ -412,7 +409,6 @@ int main(int argc, char** argv)
   const sched_param schedParam{ .sched_priority = 80 };
   if (sched_setscheduler(0, SCHED_FIFO, &schedParam) != 0)
   {
-    std::cout << "Could not set scheduler policy." << std::endl;
     return 1;
   }
 
@@ -436,13 +432,11 @@ int main(int argc, char** argv)
   int activateMasterRes = ecrt_master_activate(masterPtr);
   if (activateMasterRes != 0)
   {
-    std::cout << "Could not activate master" << std::endl;
     return 1;
   }
 
   if (!(domainProcessData = ecrt_domain_data(domainPtr)))
   {
-    std::cout << "Could not create domain data" << std::endl;
     return 1;
   }
 
@@ -486,7 +480,6 @@ int main(int argc, char** argv)
 
     std::chrono::duration<double> periodAsSecs = timespecToChronoDuration<double, std::ratio<1>>(periodTs);
 
-    std::cout << "Period: " << periodAsSecs.count() << std::endl;
     ecrt_master_application_time(masterPtr, ecat_sh_hardware::timespecToNanoSec(distributedClockHelper.wakeupTime));
 
     ecrt_master_receive(masterPtr);
@@ -500,7 +493,6 @@ int main(int argc, char** argv)
     if (rightMotorSW)
     {
       rightWheelData.status_word = rightMotorSW.value();
-      std::cout << "Right SW: " << rightMotorSW.value() << std::endl;
       // std::cout << "Written control word: " << readFromSlave<uint16_t>(domainProcessData,
       // RightMotorEthercatDataOffsets.control_word).value() << std::endl;
     }
@@ -521,7 +513,6 @@ int main(int argc, char** argv)
     if (leftMotorSW)
     {
       leftWheelData.status_word = leftMotorSW.value();
-      std::cout << "Left SW: " << leftMotorSW.value() << std::endl;
     }
     auto leftMotorCurrentPosition =
         readFromSlave<int32_t>(domainProcessData, LeftMotorEthercatDataOffsets.current_position);
@@ -540,7 +531,6 @@ int main(int argc, char** argv)
 
     if (sharedMemoryHandler.tryLock())
     {
-      std::cout << "Got lock\n";
       auto& rightWheelShData = sharedMemoryHandler.getDataPtr()[0];
       rightWheelShData.status_word = rightWheelData.status_word;
       rightWheelShData.current_position = rightWheelData.current_position;
@@ -560,7 +550,6 @@ int main(int argc, char** argv)
       //leftWheelData.current_velocity = leftWheelShData.current_velocity;
 
       leftWheelData.control_word = leftWheelShData.control_word;
-      std::cout << "ctrl: " << leftWheelData.control_word << std::endl;
       /* leftWheelData.operation_mode = leftWheelShData.operation_mode; */
       leftWheelData.target_position = leftWheelShData.target_position;
       leftWheelData.target_velocity = leftWheelShData.target_velocity;

@@ -35,8 +35,6 @@ Odometry Odometry::update(double left_wheel_vel, double right_wheel_vel, const t
     y += linearVelToAngularVelRatio * (std::cos(heading) - std::cos(oldHeading));
   }
 
-  std::cout << x << std::endl;
-  
   // TODO: Use Rolling Window Accumulation for velocities??
 
   return *this;

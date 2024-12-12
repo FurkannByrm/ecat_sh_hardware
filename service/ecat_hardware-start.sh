@@ -1,6 +1,35 @@
 #!/bin/bash
 set -Eeuo pipefail
 
+ec_status="$(ethercatctl status)"
+
+if [[ $ec_status != *"running"* ]]; then
+  ethercatctl start
+fi
+
+
+num_slaves=$REQUIRED_NUM_SLAVES ## Number of slaves to be configured, must be specfied in the config file in /etc/sysconfig
+num_preop_slaves=0
+
+while ((num_preop_slaves != num_slaves))
+do
+
+sleep .5
+
+slave_ls="$(ethercat sl)"
+
+if [[ -z "$slave_ls" ]]; then
+  continue
+fi
+
+if [[ $slave_ls == *\?* ]]; then
+  continue;
+fi
+
+num_preop_slaves=$(echo "$slave_ls" | tr " " "\n" | grep -c "PREOP")
+
+done
+
 sysconfdir="/etc/sysconfig"
 if [ -e $sysconfdir/ecathardware ]; then
   . $sysconfdir/ecathardware
@@ -15,7 +44,7 @@ DIFF_DRIVE_HARDWARE="${HARDWARE_EXEC_PATH}/diff_drive_hardware"
 # Check if the file exists and is executable
 if [ -x "$DIFF_DRIVE_HARDWARE" ]; then
   # Execute the diff_drive_hardware file
-  ./${DIFF_DRIVE_HARDWARE}/diff_drive_hardware
+  ./${DIFF_DRIVE_HARDWARE}
 else
   echo "Error: $DIFF_DRIVE_HARDWARE not found or not executable."
   exit 1

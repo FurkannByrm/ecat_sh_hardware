@@ -32,8 +32,8 @@ struct RosData
 
 struct VelocityCommand
 {
-  double linear;
-  double angular;
+  double linear = 0.0;
+  double angular = 0.0;
 };
 
 void setupOdometryMsg(nav_msgs::msg::Odometry& odom_msg);

@@ -13,21 +13,28 @@
 
 using namespace std::chrono_literals;
 
-VelocityLimiter::VelocityLimiter()
+VelocityLimiter::VelocityLimiter() :
+  prev_command(0.0)
 {
 }
 
-void VelocityLimiter::limit(double& command, double current_value, double dt)
+void VelocityLimiter::limit(double& command, double dt, double current_value)
 {
   // Limit jerk
   // Limit acceleration
+  int signum = (command <= 0 ? -1 : 1);
+  double requestedAcc = 0.0;
+  
+  requestedAcc = command - prev_command;
+    
 
-  const double requestedAcc = (current_value - command);
   const double possibleAcceleration = std::clamp(requestedAcc, min_acc * dt, max_acc * dt);
-  command += possibleAcceleration;
+  std::cout << "Possible accel: " << possibleAcceleration  << "Requested accel: " << requestedAcc << std::endl;
+  command = prev_command + (possibleAcceleration * 1.0);
   // Limit velocity
-
+  prev_command = command;
   command = std::clamp(command, min_vel, max_vel);
+  
 }
 
 CIA402_State deriveState(uint16_t status_word)
@@ -128,6 +135,17 @@ int main(int argc, char** argv)
 
   Odometry odomHandler;
 
+  VelocityLimiter linLimiter;
+  VelocityLimiter angLimiter;
+  linLimiter.max_vel = 0.45;
+  linLimiter.min_vel = -0.45;
+  linLimiter.max_acc = 0.225;
+  linLimiter.min_acc = -0.05;
+  angLimiter.max_vel = 1.0;
+  angLimiter.min_vel = -1.0;
+  angLimiter.max_acc = 0.5;
+  angLimiter.min_acc = 0.0;  
+
   std::thread rosThread(&ros_communication, std::ref(shutdownRequested), std::ref(rosSyncMutex),
                         std::ref(velCommandPtr), std::ref(rosDataPtr));
   rosThread.detach();
@@ -210,10 +228,17 @@ int main(int argc, char** argv)
       if (driversEnabled)
       {
         // Get data from ROS
-
       
-      auto wheelVelocities = getWheelVelocityFromRobotCmd(velCmd.linear, velCmd.angular);
-
+      std::cout << "Before limit: " << velCmd.linear << std::endl;
+      
+      linLimiter.limit(velCmd.linear, 0.002);
+      angLimiter.limit(velCmd.angular, 0.002);
+      std::cout << "After limit: " << velCmd.linear  << "ang:" << velCmd.angular << std::endl;
+      auto wheelVelocities = getWheelVelocityFromRobotCmd(
+        velCmd.linear, 
+        velCmd.angular
+      );
+      
       rightWheelData.target_velocity = jointLinearVelToMotorVel_BHF(wheelVelocities.first * 0.1);
       leftWheelData.target_velocity = jointLinearVelToMotorVel_BHF(wheelVelocities.second * 0.1) * -1;
       rightWheelShData.target_velocity = rightWheelData.target_velocity;

@@ -22,6 +22,7 @@
 #include <map>
 #include <functional>
 #include <iostream>
+#include <limits>
 
 #include <string.h>
 #include <errno.h>
@@ -37,12 +38,11 @@ struct VelocityLimiter
   double min_acc;
   double max_jerk;
   double min_jerk;
-  double previousValue;
-  double ppreviousValue;
+  double prev_command;
 
   VelocityLimiter();
 
-  void limit(double& command, double current_value, double dt);
+  void limit(double& command, double dt, double current_value = std::numeric_limits<double>::quiet_NaN());
 };
 
 enum class CIA402_State
