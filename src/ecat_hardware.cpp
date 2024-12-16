@@ -119,8 +119,8 @@ const ec_pdo_entry_reg_t domainRegistries[] = {
   uint channel16;
 }; */
 
-std::array<uint, 16> digitalOutputOffsets;
-std::array<uint, 16> digitalOutputBitPosition;
+std::array<uint, 16> digitalOutputOffsets = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+std::array<uint, 16> digitalOutputBitPosition = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 std::array<uint, 16> digitalInputOffsets;
 std::array<uint, 16> digitalInputBitPosition;
 
@@ -193,8 +193,8 @@ ec_sync_info_t digital_output_syncs[] = { { 0, EC_DIR_OUTPUT, 8, digital_output_
                                           { 1, EC_DIR_OUTPUT, 8, digital_output_pdos + 8, EC_WD_ENABLE },
                                           { 0xff } };
 
-ec_sync_info_t digital_output_syncs[] = { { 0, EC_DIR_OUTPUT, 16, digital_output_pdos + 0, EC_WD_ENABLE }, { 0xff }
- };
+//ec_sync_info_t digital_output_syncs[] = { { 0, EC_DIR_OUTPUT, 16, digital_output_pdos + 0, EC_WD_ENABLE }, { 0xff }
+// };
 
 
 const ec_pdo_entry_reg_t digitalIoDomainRegistries[] = {
@@ -544,9 +544,15 @@ int main(int argc, char** argv)
     }
 
     ecrt_master_sync_slave_clocks(masterPtr);
-
-    writeToSlave(digitalIoDomainProcessData, digitalOutputOffsets[0], 1, digitalOutputBitPosition[0]);
-    ecrt_domain_data(digitalIoDomainPtr);
+    if(bit_test_counter)
+    {
+      /* writeToSlave(digitalIoDomainProcessData, digitalOutputOffsets[0], true, digitalOutputBitPosition[0]); */
+      writeToSlave(digitalIoDomainProcessData, digitalOutputOffsets[1], true, digitalOutputBitPosition[1]);
+      /* writeToSlave(digitalIoDomainProcessData, digitalOutputOffsets[2], true, digitalOutputBitPosition[2]); */
+      bit_test_counter = false;
+    }
+    
+    ecrt_domain_queue(digitalIoDomainPtr);
     ecrt_domain_queue(domainPtr);
     ecrt_master_send(masterPtr);
   }
