@@ -124,32 +124,6 @@ std::array<uint, 16> digitalOutputBitPosition;
 std::array<uint, 16> digitalInputOffsets;
 std::array<uint, 16> digitalInputBitPosition;
 
-/*
-ec_pdo_entry_info_t right_motor_pdo_entries[] = { { 0x6040, 0x00, 16 }, { 0x6060, 0x00, 8 },  { 0x607a, 0x00, 32 },
-                                                  { 0x60ff, 0x00, 32 }, { 0x6041, 0x00, 16 }, { 0x6064, 0x00, 32 },
-                                                  { 0x606c, 0x00, 32 } };
-
-ec_pdo_info_t right_motor_pdo_info[] = { { 0x1603, 4, right_motor_pdo_entries + 0 },
-                                         { 0x1A03, 3, right_motor_pdo_entries + 4 } };
-
-ec_sync_info_t right_motor_slave_syncs[] = { { 0, EC_DIR_OUTPUT, 0, NULL, EC_WD_DISABLE },
-                                             { 1, EC_DIR_INPUT, 0, NULL, EC_WD_DISABLE },
-                                             { 2, EC_DIR_OUTPUT, 1, right_motor_pdo_info + 0, EC_WD_ENABLE },
-                                             { 3, EC_DIR_INPUT, 1, right_motor_pdo_info + 1, EC_WD_DISABLE },
-                                             { 0xff } };
-
-ec_pdo_entry_info_t left_motor_pdo_entries[] = { { 0x6040, 0x00, 16 }, { 0x6060, 0x00, 8 },  { 0x607a, 0x00, 32 },
-                                                 { 0x60ff, 0x00, 32 }, { 0x6041, 0x00, 16 }, { 0x6064, 0x00, 32 },
-                                                 { 0x606c, 0x00, 32 } };
-
-ec_pdo_info_t left_motor_pdo_info[] = { { 0x1603, 4, left_motor_pdo_entries + 0 },
-                                        { 0x1A03, 3, left_motor_pdo_entries + 4 } };
-
-ec_sync_info_t left_motor_slave_syncs[] = { { 0, EC_DIR_OUTPUT, 0, NULL, EC_WD_DISABLE },
-                                            { 1, EC_DIR_INPUT, 0, NULL, EC_WD_DISABLE },
-                                            { 2, EC_DIR_OUTPUT, 1, left_motor_pdo_info + 0, EC_WD_ENABLE },
-                                            { 3, EC_DIR_INPUT, 1, left_motor_pdo_info + 1, EC_WD_DISABLE },
-                                            { 0xff } };
 
 constexpr auto DIGITAL_INPUT_START_POSITION = 3;
 constexpr auto DIGITAL_INPUT_ALIAS = 0;
@@ -218,39 +192,12 @@ ec_pdo_info_t digital_output_pdos[] = {
 ec_sync_info_t digital_output_syncs[] = { { 0, EC_DIR_OUTPUT, 8, digital_output_pdos + 0, EC_WD_ENABLE },
                                           { 1, EC_DIR_OUTPUT, 8, digital_output_pdos + 8, EC_WD_ENABLE },
                                           { 0xff } };
-*/
-/* ec_sync_info_t digital_output_syncs[] = { { 0, EC_DIR_OUTPUT, 16, digital_output_pdos + 0, EC_WD_ENABLE }, { 0xff }
- * };
 
-const ec_pdo_entry_reg_t domainRegistries[] = {
-  { SLAVE_ALIAS, SLAVE_START_POSITION, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6040, 0x00,
-    &RightMotorEthercatDataOffsets.control_word },
-  { SLAVE_ALIAS, SLAVE_START_POSITION, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6060, 0x00,
-    &RightMotorEthercatDataOffsets.operation_mode },
-  { SLAVE_ALIAS, SLAVE_START_POSITION, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x607a, 0x00,
-    &RightMotorEthercatDataOffsets.target_position },
-  { SLAVE_ALIAS, SLAVE_START_POSITION, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x60ff, 0x00,
-    &RightMotorEthercatDataOffsets.target_velocity },
-  { SLAVE_ALIAS, SLAVE_START_POSITION, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6041, 0x00,
-    &RightMotorEthercatDataOffsets.status_word },
-  { SLAVE_ALIAS, SLAVE_START_POSITION, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6064, 0x00,
-    &RightMotorEthercatDataOffsets.current_position },
-  { SLAVE_ALIAS, SLAVE_START_POSITION, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x606C, 0x00,
-    &RightMotorEthercatDataOffsets.current_velocity },
-  { SLAVE_ALIAS, SLAVE_START_POSITION + 1, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6040, 0x00,
-    &LeftMotorEthercatDataOffsets.control_word },
-  { SLAVE_ALIAS, SLAVE_START_POSITION + 1, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6060, 0x00,
-    &LeftMotorEthercatDataOffsets.operation_mode },
-  { SLAVE_ALIAS, SLAVE_START_POSITION + 1, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x607a, 0x00,
-    &LeftMotorEthercatDataOffsets.target_position },
-  { SLAVE_ALIAS, SLAVE_START_POSITION + 1, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x60ff, 0x00,
-    &LeftMotorEthercatDataOffsets.target_velocity },
-  { SLAVE_ALIAS, SLAVE_START_POSITION + 1, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6041, 0x00,
-    &LeftMotorEthercatDataOffsets.status_word },
-  { SLAVE_ALIAS, SLAVE_START_POSITION + 1, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x6064, 0x00,
-    &LeftMotorEthercatDataOffsets.current_position },
-  { SLAVE_ALIAS, SLAVE_START_POSITION + 1, SLAVE_VENDOR_ID, SLAVE_PRODUCT_ID, 0x606C, 0x00,
-    &LeftMotorEthercatDataOffsets.current_velocity },
+ec_sync_info_t digital_output_syncs[] = { { 0, EC_DIR_OUTPUT, 16, digital_output_pdos + 0, EC_WD_ENABLE }, { 0xff }
+ };
+
+
+const ec_pdo_entry_reg_t digitalIoDomainRegistries[] = {
   { DIGITAL_INPUT_ALIAS, DIGITAL_INPUT_START_POSITION, DIGITAL_INPUT_VENDOR_ID, DIGITAL_INPUT_PRODUCT_ID, 0x6000, 0x01,
     &digitalInputOffsets[0], &digitalInputBitPosition[0] },
   { DIGITAL_INPUT_ALIAS, DIGITAL_INPUT_START_POSITION, DIGITAL_INPUT_VENDOR_ID, DIGITAL_INPUT_PRODUCT_ID, 0x6010, 0x01,
@@ -316,7 +263,7 @@ const ec_pdo_entry_reg_t domainRegistries[] = {
   { DIGITAL_OUTPUT_ALIAS, DIGITAL_OUTPUT_START_POSITION, DIGITAL_OUTPUT_VENDOR_ID, DIGITAL_OUTPUT_PRODUCT_ID, 0x70f0,
     0x01, &digitalOutputOffsets[15], &digitalOutputBitPosition[15] },
   {}
-}; */
+};
 
 bool runHardwareLoop = true;
 
@@ -382,7 +329,7 @@ int main(int argc, char** argv)
 
   ecrt_slave_config_dc(slaveConfigPtr, 0x0700, 2000000, 0, 2000000, 0);
 
-  /* slaveConfigPtr = ecrt_master_slave_config(masterPtr, 0, 2, DIGITAL_INPUT_VENDOR_ID, 0x044c2c52);
+  //slaveConfigPtr = ecrt_master_slave_config(masterPtr, 0, 2, DIGITAL_INPUT_VENDOR_ID, 0x044c2c52);
 
   slaveConfigPtr = ecrt_master_slave_config(masterPtr, DIGITAL_INPUT_ALIAS, DIGITAL_INPUT_START_POSITION,
                                             DIGITAL_INPUT_VENDOR_ID, DIGITAL_INPUT_PRODUCT_ID);
@@ -401,7 +348,7 @@ int main(int argc, char** argv)
   {
     std::cout << "Could not configure digital input PDOs." << std::endl;
     return 1;
-  } */
+  }
 
   int registerDomainEntriesRes = ecrt_domain_reg_pdo_entry_list(domainPtr, domainRegistries);
 
@@ -410,12 +357,12 @@ int main(int argc, char** argv)
     return 1;
   }
 
-  //registerDomainEntriesRes = ecrt_domain_reg_pdo_entry_list(digitalIoDomainPtr, digitalIoDomainRegistries);
-  //if(registerDomainEntriesRes != 0)
-  //{
-  //  std::cout << "Could not register digital IO PDO list." << std::endl;
-  //  return 1;
-  //}
+  registerDomainEntriesRes = ecrt_domain_reg_pdo_entry_list(digitalIoDomainPtr, digitalIoDomainRegistries);
+  if(registerDomainEntriesRes != 0)
+  {
+    std::cout << "Could not register digital IO PDO list." << std::endl;
+    return 1;
+  }
 
   // Set current thread scheduler and priority:
 
@@ -450,6 +397,12 @@ int main(int argc, char** argv)
 
   if (!(domainProcessData = ecrt_domain_data(domainPtr)))
   {
+    return 1;
+  }
+
+  if(!(digitalIoDomainProcessData = ecrt_domain_data(digitalIoDomainPtr)))
+  {
+    std::cout << "Could not get digital IO domain data." << std::endl;
     return 1;
   }
 
@@ -592,6 +545,8 @@ int main(int argc, char** argv)
 
     ecrt_master_sync_slave_clocks(masterPtr);
 
+    writeToSlave(digitalIoDomainProcessData, digitalOutputOffsets[0], 1, digitalOutputBitPosition[0]);
+    ecrt_domain_data(digitalIoDomainPtr);
     ecrt_domain_queue(domainPtr);
     ecrt_master_send(masterPtr);
   }
