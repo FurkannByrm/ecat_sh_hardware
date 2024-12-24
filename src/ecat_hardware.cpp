@@ -376,7 +376,7 @@ int main(int argc, char** argv)
 
   std::expected<shm_handler::SharedMemoryHandler<shared_obj_info::EthercatDataObject, 2>, shm_handler::Error>
       sharedMemoryHandlerInit = shm_handler::SharedMemoryHandler<shared_obj_info::EthercatDataObject, 2>::create(
-          shared_obj_info::SHARED_MEMORY_SEG_NAME, shared_obj_info::ETHERCAT_DATA_SEM_NAME, shm_handler::Mode::CREATE);
+          shared_obj_info::SHARED_MEMORY_SEG_NAME, shared_obj_info::ETHERCAT_DATA_SEM_NAME, Mode::CREATE);
 
   if (!sharedMemoryHandlerInit.has_value())
   {
