@@ -413,6 +413,18 @@ int main(int argc, char** argv)
 
   clock_gettime(CLOCK_MONOTONIC, &distributedClockHelper.wakeupTime);
 
+  std::atomic<bool> runServer = true;
+  std::condition_variable ioServerCv;
+  std::shared_ptr<ecat_sh_hardware::IoCommandQueue> ioCommandQueue = std::make_shared<ecat_sh_hardware::IoCommandQueue>();
+
+  std::thread ioServerThread(ecat_sh_hardware::io_tcp_server_func,
+    std::ref(runServer),
+    std::ref(ioServerCv),
+    ioCommandQueue,
+    3255,
+    4096
+  );
+
   shared_obj_info::EthercatDataObject rightWheelData;
   shared_obj_info::EthercatDataObject leftWheelData;
 
@@ -544,18 +556,14 @@ int main(int argc, char** argv)
     }
 
     ecrt_master_sync_slave_clocks(masterPtr);
-    if(bit_test_counter)
-    {
-      /* writeToSlave(digitalIoDomainProcessData, digitalOutputOffsets[0], true, digitalOutputBitPosition[0]); */
-      writeToSlave(digitalIoDomainProcessData, digitalOutputOffsets[1], true, digitalOutputBitPosition[1]);
-      /* writeToSlave(digitalIoDomainProcessData, digitalOutputOffsets[2], true, digitalOutputBitPosition[2]); */
-      bit_test_counter = false;
-    }
     
     ecrt_domain_queue(digitalIoDomainPtr);
     ecrt_domain_queue(domainPtr);
     ecrt_master_send(masterPtr);
   }
+
+  runServer = false;
+  ioServerThread.join();
 
   writeToSlave(domainProcessData, RightMotorEthercatDataOffsets.target_velocity, 0);
   writeToSlave(domainProcessData, LeftMotorEthercatDataOffsets.target_velocity, 0);
@@ -566,6 +574,7 @@ int main(int argc, char** argv)
   using namespace std::chrono_literals;
   std::this_thread::sleep_for(10ms);
 
+  
 
   ecrt_release_master(masterPtr);
 

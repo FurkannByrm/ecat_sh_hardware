@@ -14,6 +14,7 @@ add_compile_options(-std=c++23)
 
 find_package(Threads REQUIRED)
 
+find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(tf2 REQUIRED COMPONENTS LinearMath)
 find_package(tf2_msgs REQUIRED)
@@ -31,10 +32,12 @@ message(ipc_handlers_INCLUDE_DIRS="${IPC_HANDLERS_INCLUDE_DIRS}")
 add_executable(
 	diff_drive_hardware
 	src/ecat_hardware.cpp
+  src/io_tcp_server.cpp
   src/utils.cpp
 )
-target_include_directories(diff_drive_hardware PUBLIC include/ ${ipc_handlers_INCLUDE_DIRS} ${timespec_chrono_conversions_INCLUDE_DIRS}/timespec_chrono_conversions)
-target_link_libraries(diff_drive_hardware ethercat rt Threads::Threads ${ipc_handlers_LIBRARIES})
+target_include_directories(diff_drive_hardware PUBLIC include/ /home/upxtreme/ethercat/include/ ${ipc_handlers_INCLUDE_DIRS} ${timespec_chrono_conversions_INCLUDE_DIRS}/timespec_chrono_conversions)
+target_link_libraries(diff_drive_hardware /usr/local/etherlab/lib/libethercat.so rt Threads::Threads ${ipc_handlers_LIBRARIES})
+
 
 add_executable(
   diff_drive_controller

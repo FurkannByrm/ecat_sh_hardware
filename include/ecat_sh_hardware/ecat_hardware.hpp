@@ -3,14 +3,17 @@
 
 #include "ecrt.h"
 #include "ecat_sh_hardware/utils.hpp"
+#include "ecat_sh_hardware/io_tcp_server.hpp"
 
 #include "ipc_handlers/shm_handler.hpp"
+#include "ipc_handlers/common.hpp"
 
 #include <sched.h>
 #include <optional>
 #include <stdint.h>
 #include <string.h>
 #include <errno.h>
+#include <thread>
 
 template <typename T>
 std::optional<T> readFromSlave(uint8_t *domainDataPtr, uint object_offset, uint bit_position = 0) {

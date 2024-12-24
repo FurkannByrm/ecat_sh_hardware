@@ -93,7 +93,7 @@ uint16_t transitionToState(CIA402_State state, uint16_t control_word)
     case CIA402_State::READY_TO_SWITCH_ON:
       return (control_word & 0b01110111) | 0b00000111;
     case CIA402_State::SWITCH_ON:
-      return (control_word & 0b01111111) | 0b00001111;
+      return (control_word & 0b01111111) | 0b00001101;
     case CIA402_State::OPERATION_ENABLED:
       return control_word;
     case CIA402_State::QUICK_STOP_ACTIVE:
@@ -112,7 +112,7 @@ int main(int argc, char** argv)
 {
   std::expected<shm_handler::SharedMemoryHandler<shared_obj_info::EthercatDataObject, 2>, shm_handler::Error>
       sharedMemoryHandlerInit = shm_handler::SharedMemoryHandler<shared_obj_info::EthercatDataObject, 2>::create(
-          shared_obj_info::SHARED_MEMORY_SEG_NAME, shared_obj_info::ETHERCAT_DATA_SEM_NAME, shm_handler::Mode::OPEN);
+          shared_obj_info::SHARED_MEMORY_SEG_NAME, shared_obj_info::ETHERCAT_DATA_SEM_NAME, Mode::OPEN);
 
   if (!sharedMemoryHandlerInit.has_value())
   {
@@ -253,7 +253,7 @@ int main(int argc, char** argv)
     }
     
     
-    std::this_thread::sleep_for(2ms);
+    std::this_thread::sleep_for(8ms);
   }
   shutdownRequested = true;
 }

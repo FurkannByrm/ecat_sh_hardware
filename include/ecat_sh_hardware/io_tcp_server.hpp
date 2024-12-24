@@ -138,6 +138,14 @@ struct IoCommandQueue
 };  
 
 
+void io_tcp_server_func(
+  std::atomic<bool> &run_server,
+  std::condition_variable &cv,
+  std::shared_ptr<IoCommandQueue> queue,
+  uint16_t server_port,
+  uint16_t max_buffer_size
+);
+
 } // namespace ecat_sh_hardware
 
 #endif // ECAT_SH_HARDWARE_IO_TCP_SERVER_HPP

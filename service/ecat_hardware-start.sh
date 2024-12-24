@@ -1,13 +1,18 @@
 #!/bin/bash
 set -Eeuo pipefail
 
-ec_status="$(ethercatctl status)"
+ec_status="$(/etc/init.d/ethercat status)"
 
 if [[ $ec_status != *"running"* ]]; then
-  ethercatctl start
+  /etc/init.d/ethercat status
 fi
 
 
+#git_branch="$(git branch 2> /dev/null | grep '^*' | colrm 1 2 | xargs -I BRANCH echo -n ""
+#
+#if [[ "$git_branch" != "ec_io_domain"  ]]; then
+#  git checkout ec_io_domain
+#fi
 num_slaves=$REQUIRED_NUM_SLAVES ## Number of slaves to be configured, must be specfied in the config file in /etc/sysconfig
 num_preop_slaves=0
 

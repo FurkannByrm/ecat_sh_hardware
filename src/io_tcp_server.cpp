@@ -1,7 +1,7 @@
 
 #include "ecat_sh_hardware/io_tcp_server.hpp"
 
-using namespace ecat_sh_hardware;
+namespace ecat_sh_hardware {
 
 void io_tcp_server_func(
   std::atomic<bool> &run_server,
@@ -45,8 +45,9 @@ void io_tcp_server_func(
 
   std::shared_ptr<IoCommandQueue> cmdQueue = queue;
 
-  while(!run_server.load())
+  while(run_server.load())
   {
+    std::cout << "Running server...\n";
     socketFd = accept(serverFd, (sockaddr*)&clientAddr, &addresLen);
 
     if(socketFd < 0)
@@ -56,7 +57,7 @@ void io_tcp_server_func(
     }
 
     char messageBuffer[max_buffer_size] = {0};
-    int bytesRead = read(socketFd, messageBuffer, max_buffer_size);
+    int bytesRead = read(socketFd, messageBuffer, 247);
 
     // Error cases
     if(bytesRead == -1)
@@ -67,10 +68,12 @@ void io_tcp_server_func(
     {
       std::cout << "Read EOF" << std::endl;
     }
-
+    std::cout << bytesRead << std::endl;
     // Deserialize message
-
-    auto reqOpt = IoRequest::fromStr(messageBuffer);
+    std::string reqStr = std::string(messageBuffer);
+    
+    std::cout << std::hex << reqStr << "\n";
+    auto reqOpt = IoRequest::fromStr(reqStr);
     if(!reqOpt.has_value())
     {
      
@@ -84,7 +87,7 @@ void io_tcp_server_func(
     }
 
     std::unique_lock lk(queue->commandQueueMutex);
-    cv.wait(lk, [&queue]{queue->commandQueue.empty();});
+    cv.wait(lk, [&queue]{return queue->commandQueue.empty();});
     
     std::vector<IoCommandQueue::Response> responses;
     {
@@ -119,5 +122,7 @@ void io_tcp_server_func(
   }
 
   close(serverFd);
+
+}
 
 }

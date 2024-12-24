@@ -29,7 +29,7 @@
 
 #include "ecat_sh_hardware/kinematics.hpp"
 #include "ipc_handlers/shm_handler.hpp"
-
+#include "ipc_handlers/common.hpp"
 struct VelocityLimiter
 {
   double max_vel;
