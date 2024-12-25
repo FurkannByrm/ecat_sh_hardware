@@ -56,8 +56,8 @@ void io_tcp_server_func(
       return;
     }
 
-    char messageBuffer[max_buffer_size] = {0};
-    int bytesRead = read(socketFd, messageBuffer, 247);
+    char messageBuffer[1024] = {0};
+    int bytesRead = read(socketFd, messageBuffer, 1024);
 
     // Error cases
     if(bytesRead == -1)
@@ -83,7 +83,7 @@ void io_tcp_server_func(
     for(const auto& [key, type, value] : request.requests)
     {
       std::lock_guard<std::mutex> lock(cmdQueue->commandQueueMutex);
-      queue->commandQueue.push(IoCommandQueue::Command{type, key, (bool)value});
+      queue->commandQueue.push(IoCommandQueue::Command{type, key, value.value()});
     }
 
     std::unique_lock lk(queue->commandQueueMutex);

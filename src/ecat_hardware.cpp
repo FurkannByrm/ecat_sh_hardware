@@ -555,6 +555,23 @@ int main(int argc, char** argv)
       distributedClockHelper.referenceClockCounter = 1;
     }
 
+    while(!ioCommandQueue->commandQueue.empty())
+    {
+
+      auto command = ioCommandQueue->commandQueue.front();
+      std::cout << command.index << " " << command.value << std::endl;
+      if(command.type == ecat_sh_hardware::IoRequest::RequestType::WRITE)
+      {
+        writeToSlave(digitalIoDomainProcessData, digitalOutputOffsets[command.index], command.value, digitalOutputBitPosition[command.index]);
+      }
+      ioCommandQueue->commandQueue.pop();
+
+    }
+    if(ioCommandQueue->commandQueue.empty())
+    {
+      ioServerCv.notify_one();
+    }
+
     ecrt_master_sync_slave_clocks(masterPtr);
     
     ecrt_domain_queue(digitalIoDomainPtr);
@@ -562,6 +579,7 @@ int main(int argc, char** argv)
     ecrt_master_send(masterPtr);
   }
 
+  std::cout << "Shutting down EtherCAT hardware\n";
   runServer = false;
   ioServerThread.join();
 

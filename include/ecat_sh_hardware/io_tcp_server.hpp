@@ -66,7 +66,8 @@ struct IoRequest
       if (req.find("value") != req.end()) {
         value = req["value"].get<int>();
       }
-      data.requests.push_back({req["key"].get<int>(), type, value});
+      
+      data.requests.push_back({req["key"].get<int>(), type, value.value()});
     }
     return data;
   }
