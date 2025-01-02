@@ -32,6 +32,13 @@ struct WheelParams
   double increment;
 };
 
+struct JointInfo
+{
+  double position;
+  double velocity;
+  double effort;
+};
+
 struct Odometry
 {
   double linearVel;   // [m/s]

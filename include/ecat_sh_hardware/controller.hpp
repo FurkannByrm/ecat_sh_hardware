@@ -14,6 +14,7 @@
 
 #include "ecat_sh_hardware/ros_communication.hpp"
 #include "ecat_sh_hardware/shared_obj.hpp"
+#include "ecat_sh_hardware/utils.hpp"
 
 #include <thread>
 #include <mutex>
@@ -30,6 +31,7 @@
 #include "ecat_sh_hardware/kinematics.hpp"
 #include "ipc_handlers/shm_handler.hpp"
 #include "ipc_handlers/common.hpp"
+
 struct VelocityLimiter
 {
   double max_vel;
@@ -45,19 +47,7 @@ struct VelocityLimiter
   void limit(double& command, double dt, double current_value = std::numeric_limits<double>::quiet_NaN());
 };
 
-enum class CIA402_State
-{
-  UNKNOWN_STATE,
-  START,
-  NOT_READY_TO_SWITCH_ON,
-  SWITCH_ON_DISABLED,
-  READY_TO_SWITCH_ON,
-  SWITCH_ON,
-  OPERATION_ENABLED,
-  FAULT_REACTION_ACTIVE,
-  FAULT,
-  QUICK_STOP_ACTIVE
-};
+
 
 const std::map<CIA402_State, std::string> DEVICE_STATE_STR = {
   { CIA402_State::START, "Start" },

@@ -130,6 +130,9 @@ int main(int argc, char** argv)
 
   std::shared_ptr<VelocityCommand> velCommandPtr = std::make_shared<VelocityCommand>();
   std::shared_ptr<RosData> rosDataPtr = std::make_shared<RosData>();
+  rosDataPtr->device_states.resize(2);
+  rosDataPtr->joint_states.resize(2);
+
   std::mutex rosSyncMutex;
   std::atomic<bool> shutdownRequested = false;
 
@@ -179,7 +182,6 @@ int main(int argc, char** argv)
         if((rightWheelShData.status_word & 0x0008) && !(rightWheelShData.status_word & 0x0007)) {
           newControlWord = 0x0080;
         }
-
         
         rightWheelShData.control_word = newControlWord;
         rightWheelStateHandler.previousControlWord = newControlWord;
@@ -220,20 +222,29 @@ int main(int argc, char** argv)
 
           rosSyncMutex.lock();
           VelocityCommand velCmd = *velCommandPtr;  
+          // Calculte odometry
           auto od = odomHandler.update(motorVelToLinearVel_BHFF((double)rightWheelShData.current_velocity / 0.1), motorVelToLinearVel_BHFF((double)leftWheelShData.current_velocity / 0.1), currentTime);
+          // Update ROS data
           rosDataPtr->odometry = od;
+          
+          rosDataPtr->device_states[0] = rightWheelStateHandler.previousState; 
+          rosDataPtr->device_states[1] = leftWheelStateHandler.previousState;
+          
+          rosDataPtr->joint_states[0].position = rightWheelShData.current_position;
+          rosDataPtr->joint_states[1].position = leftWheelShData.current_position;
+
+          rosDataPtr->joint_states[0].velocity = rightWheelShData.current_velocity;
+          rosDataPtr->joint_states[1].velocity = leftWheelShData.current_velocity;
+
           rosSyncMutex.unlock();
 
       // If all slaves are operational, write commands:
       if (driversEnabled)
       {
-        // Get data from ROS
-      
-      std::cout << "Before limit: " << velCmd.linear << std::endl;
-      
+        // Get data from ROS      
       linLimiter.limit(velCmd.linear, 0.002);
       angLimiter.limit(velCmd.angular, 0.002);
-      std::cout << "After limit: " << velCmd.linear  << "ang:" << velCmd.angular << std::endl;
+      
       auto wheelVelocities = getWheelVelocityFromRobotCmd(
         velCmd.linear, 
         velCmd.angular

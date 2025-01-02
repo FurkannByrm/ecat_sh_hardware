@@ -56,9 +56,26 @@ void ros_communication(std::atomic<bool>& shutdown_requested, std::mutex& ros_sy
   std::shared_ptr<VelocityCommand> velCommandPtr = command_ptr;
   std::shared_ptr<RosData> rosDataPtr = data;
   std::queue<geometry_msgs::msg::TwistStamped> velCmdQueue;
+  
   RosData rosData;
   nav_msgs::msg::Odometry odomMsg;
   setupOdometryMsg(odomMsg);
+
+  amr_custom_interfaces::msg::HardwareInfoArray hardwareInfoMsg;
+  hardwareInfoMsg.motor_driver_info.resize(2);
+
+  sensor_msgs::msg::JointState jointStateMsg;
+  jointStateMsg.name.resize(2);
+  jointStateMsg.name[0] = "right_wheel_joint";
+  jointStateMsg.name[1] = "left_wheel_joint";
+  jointStateMsg.position.resize(2);
+  jointStateMsg.position[0] = 0.0;
+  jointStateMsg.position[1] = 0.0;
+  jointStateMsg.velocity.resize(2);
+  jointStateMsg.velocity[0] = 0.0;
+  jointStateMsg.velocity[1] = 0.0;
+  jointStateMsg.header.frame_id = "base_link";
+  
 
   std::shared_ptr<rclcpp::Subscription<geometry_msgs::msg::TwistStamped>> velCommandSub =
       controllerNode->create_subscription<geometry_msgs::msg::TwistStamped>(
@@ -67,14 +84,26 @@ void ros_communication(std::atomic<bool>& shutdown_requested, std::mutex& ros_sy
             // Push to command queue
             velCmdQueue.push(*vel_cmd);
           });
+
   std::shared_ptr<rclcpp::Publisher<nav_msgs::msg::Odometry>> odomPub =
   controllerNode->create_publisher<nav_msgs::msg::Odometry>("/odom",
                                                                 rclcpp::SystemDefaultsQoS());
+
+  std::shared_ptr<rclcpp::Publisher<amr_custom_interfaces::msg::HardwareInfoArray>> hardwareInfoPub =
+      controllerNode->create_publisher<amr_custom_interfaces::msg::HardwareInfoArray>(
+          "/hardware_info", rclcpp::SystemDefaultsQoS());
+
+  std::shared_ptr<rclcpp::Publisher<sensor_msgs::msg::JointState>> jointStatePub =
+      controllerNode->create_publisher<sensor_msgs::msg::JointState>("/joint_states",
+                                                                     rclcpp::SystemDefaultsQoS());
+
   auto cleanupRosMembers = [&]() -> void {
     velCommandSub.reset();
     odomPub.reset();
+    hardwareInfoPub.reset();
     controllerNode.reset();
   };
+
   rclcpp::executors::SingleThreadedExecutor exec;
   exec.add_node(controllerNode);
   rclcpp::Rate rate(250.0);
@@ -101,17 +130,27 @@ void ros_communication(std::atomic<bool>& shutdown_requested, std::mutex& ros_sy
       *command_ptr = { currCommand.linear.x, currCommand.angular.z };  
       velCmdQueue.pop();
     }
-    //else
-    //{
-    //  *command_ptr = {0.0, 0.0};
-    //}
+
     rosData = *data;
     ros_sync_mutex.unlock();
+
+    hardwareInfoMsg.motor_driver_info.at(0).status = to_integral(rosData.device_states.at(0));
+    hardwareInfoMsg.motor_driver_info.at(1).status = to_integral(rosData.device_states.at(1));
+
+    jointStateMsg.position[0] = rosData.joint_states.at(0).position;
+    jointStateMsg.position[1] = rosData.joint_states.at(1).position;
+
+    jointStateMsg.velocity[0] = rosData.joint_states.at(0).velocity;
+    jointStateMsg.velocity[1] = rosData.joint_states.at(1).velocity;
+
+    jointStateMsg.header.stamp = controllerNode->get_clock()->now();
     
     toRosOdom(rosData.odometry, odomMsg);
 
     odomMsg.header.stamp = currentTime;
     odomPub->publish(odomMsg);
+
+    hardwareInfoPub->publish(hardwareInfoMsg);
 
     previousUpdateTime = currentTime;
     rate.sleep();
