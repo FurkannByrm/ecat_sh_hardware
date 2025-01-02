@@ -17,6 +17,9 @@
 #include <math.h>
 #include <iostream>
 
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/rolling_mean.hpp>
+
 using timepoint = std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<double, std::ratio<1>>>;
 
 constexpr auto WHEEL_POSITION_INCREMENT = 16384.0;
@@ -41,11 +44,18 @@ struct JointInfo
 
 struct Odometry
 {
+
+  using RollingMeanAccumulator = boost::accumulators::accumulator_set<double, boost::accumulators::stats<boost::accumulators::tag::rolling_mean>>;
+  using RollingWindowSize = boost::accumulators::tag::rolling_window;
+  
   double linearVel;   // [m/s]
   double angularVel;  // [rad/s]
   double x;           // [m]
   double y;           // [m]
   double heading;     // rad
+
+  RollingMeanAccumulator linearVelAccumulator;
+  RollingMeanAccumulator angularVelAccumulator;
 
   WheelParams wheelParams;
 
@@ -56,7 +66,9 @@ struct Odometry
       angularVel(0),
       x(0),
       y(0),
-      heading(0)
+      heading(0),
+      linearVelAccumulator(boost::accumulators::tag::rolling_window::window_size = 10),
+      angularVelAccumulator(boost::accumulators::tag::rolling_window::window_size = 10)
   {
   }
 

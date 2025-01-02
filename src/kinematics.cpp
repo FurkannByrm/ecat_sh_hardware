@@ -36,6 +36,12 @@ Odometry Odometry::update(double left_wheel_vel, double right_wheel_vel, const t
   }
 
   // TODO: Use Rolling Window Accumulation for velocities??
+  
+  linearVelAccumulator(linearVelBody / dt);
+  angularVelAccumulator(angularVelBody / dt);
+
+  linearVel = boost::accumulators::rolling_mean(linearVelAccumulator);
+  angularVel = boost::accumulators::rolling_mean(angularVelAccumulator);
 
   return *this;
 

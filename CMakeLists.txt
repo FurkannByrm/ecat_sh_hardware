@@ -13,6 +13,7 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 add_compile_options(-std=c++23)
 
 find_package(Threads REQUIRED)
+find_package(Boost REQUIRED)
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -23,8 +24,10 @@ find_package(nav_msgs REQUIRED)
 find_package(rosidl_typesupport_cpp REQUIRED)
 find_package(rosidl_default_runtime REQUIRED)
 find_package(rcl_interfaces REQUIRED)
+
 find_package(ipc_handlers REQUIRED)
 find_package(timespec_chrono_conversions REQUIRED)
+
 
 message(ipc_handlers_INCLUDE_DIRS="${IPC_HANDLERS_INCLUDE_DIRS}")
 
@@ -50,6 +53,7 @@ target_include_directories(
   diff_drive_controller 
   PUBLIC 
   include/ 
+  ${Boost_INCLUDE_DIRS}
   ${ipc_handlers_INCLUDE_DIRS} 
   ${timespec_chrono_conversions_INCLUDE_DIRS}/timespec_chrono_conversions 
   ${rclcpp_INCLUDE_DIRS} 
