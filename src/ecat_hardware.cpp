@@ -555,9 +555,11 @@ int main(int argc, char** argv)
       distributedClockHelper.referenceClockCounter = 1;
     }
 
+    {
+      std::unique_lock lk(ioCommandQueue->commandQueueMutex);
     while(!ioCommandQueue->commandQueue.empty())
     {
-
+      
       auto command = ioCommandQueue->commandQueue.front();
       std::cout << command.index << " " << command.value << std::endl;
       if(command.type == ecat_sh_hardware::IoRequest::RequestType::WRITE)
@@ -565,11 +567,15 @@ int main(int argc, char** argv)
         writeToSlave(digitalIoDomainProcessData, digitalOutputOffsets[command.index], command.value, digitalOutputBitPosition[command.index]);
       }
       ioCommandQueue->commandQueue.pop();
-
+      
     }
     if(ioCommandQueue->commandQueue.empty())
     {
+
+      
       ioServerCv.notify_one();
+    }
+
     }
 
     ecrt_master_sync_slave_clocks(masterPtr);

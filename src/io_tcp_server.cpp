@@ -45,9 +45,11 @@ void io_tcp_server_func(
 
   std::shared_ptr<IoCommandQueue> cmdQueue = queue;
 
+  bool connected = false;
   while(run_server.load())
   {
     std::cout << "Running server...\n";
+    if(!connected)
     socketFd = accept(serverFd, (sockaddr*)&clientAddr, &addresLen);
 
     if(socketFd < 0)
@@ -55,7 +57,13 @@ void io_tcp_server_func(
       std::cout << "Failed to accept connection" << std::endl;
       return;
     }
+    else{
+      connected = true;
+    }
 
+    
+
+    if(connected){
     char messageBuffer[1024] = {0};
     int bytesRead = read(socketFd, messageBuffer, 1024);
 
@@ -88,35 +96,37 @@ void io_tcp_server_func(
 
     std::unique_lock lk(queue->commandQueueMutex);
     cv.wait(lk, [&queue]{return queue->commandQueue.empty();});
+    }
+    //
+    //std::vector<IoCommandQueue::Response> responses;
+    //{
+    //  std::lock_guard<std::mutex> lock(cmdQueue->commandQueueMutex);
+    //  while(!queue->responseQueue.empty())
+    //  {
+    //    responses.push_back(queue->responseQueue.front());
+    //    queue->responseQueue.pop();
+    //  }
+    //}
+//
+    //if(!responses.empty())
+    //{
+    //  IoResponse resp;
+    //  resp.timestamp = std::chrono::system_clock::now();
+//
+    //  for(const auto& response : responses)
+    //  {
+    //    resp.responses.push_back(std::make_tuple(response.index, response.value));
+    //  }
+    //  std::string respStr = IoResponse::toJsonStr(resp);
+    //  size_t writenBytes = write(socketFd, respStr.c_str(), sizeof(char) * respStr.size());
+    //  if(writenBytes < 0)
+    //  {
+    //    std::cout << "Failed to write response" << std::endl;
+    //  }
+    //  
+    //}
     
-    std::vector<IoCommandQueue::Response> responses;
-    {
-      std::lock_guard<std::mutex> lock(cmdQueue->commandQueueMutex);
-      while(!queue->responseQueue.empty())
-      {
-        responses.push_back(queue->responseQueue.front());
-        queue->responseQueue.pop();
-      }
-    }
-
-    if(!responses.empty())
-    {
-      IoResponse resp;
-      resp.timestamp = std::chrono::system_clock::now();
-
-      for(const auto& response : responses)
-      {
-        resp.responses.push_back(std::make_tuple(response.index, response.value));
-      }
-      std::string respStr = IoResponse::toJsonStr(resp);
-      size_t writenBytes = write(socketFd, respStr.c_str(), sizeof(char) * respStr.size());
-      if(writenBytes < 0)
-      {
-        std::cout << "Failed to write response" << std::endl;
-      }
-      
-    }
-
+    if(!connected)
     close(socketFd);
 
   }
