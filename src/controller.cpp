@@ -264,7 +264,7 @@ int main(int argc, char** argv)
     }
     
     
-    std::this_thread::sleep_for(8ms);
+    std::this_thread::sleep_for(2ms);
   }
   shutdownRequested = true;
 }

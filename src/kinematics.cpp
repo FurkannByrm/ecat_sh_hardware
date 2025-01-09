@@ -40,8 +40,8 @@ Odometry Odometry::update(double left_wheel_vel, double right_wheel_vel, const t
   linearVelAccumulator(linearVelBody / dt);
   angularVelAccumulator(angularVelBody / dt);
 
-  linearVel = boost::accumulators::rolling_mean(linearVelAccumulator);
-  angularVel = boost::accumulators::rolling_mean(angularVelAccumulator);
+  //linearVel = boost::accumulators::rolling_mean(linearVelAccumulator);
+  //angularVel = boost::accumulators::rolling_mean(angularVelAccumulator);
 
   return *this;
 

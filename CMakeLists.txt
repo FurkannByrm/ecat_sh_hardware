@@ -3,7 +3,7 @@ project(ecat_sh_hardware VERSION 0.1 LANGUAGES C CXX)
 
 set(CXX_STANDARD 23)
 
-set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} /usr/local /opt/ros/humble/include/)
+set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} /usr/local /opt/ros/humble)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
   add_compile_options(-Wall -Wextra  -Werror=return-type)
@@ -24,6 +24,8 @@ find_package(nav_msgs REQUIRED)
 find_package(rosidl_typesupport_cpp REQUIRED)
 find_package(rosidl_default_runtime REQUIRED)
 find_package(rcl_interfaces REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(amr_custom_interfaces REQUIRED)
 
 find_package(ipc_handlers REQUIRED)
 find_package(timespec_chrono_conversions REQUIRED)
@@ -48,7 +50,7 @@ add_executable(
   src/kinematics.cpp
   src/ros_communication.cpp
 )
-target_link_libraries(diff_drive_controller rt Threads::Threads ${ipc_handlers_LIBRARIES} ${rclcpp_LIBRARIES} ${rcl_interfaces_LIBRARIES} ${rosidl_typesupport_cpp_LIBRARIES} ${rosidl_default_runtime_LIBRARIES} ${tf2_LIBRARIES} ${geometry_msgs} ${nav_msgs_LIBRARIES} ${tf2_msgs})
+target_link_libraries(diff_drive_controller rt Threads::Threads ${ipc_handlers_LIBRARIES} ${rclcpp_LIBRARIES} ${rcl_interfaces_LIBRARIES} ${rosidl_typesupport_cpp_LIBRARIES} ${rosidl_default_runtime_LIBRARIES} ${tf2_LIBRARIES} ${geometry_msgs} ${sensor_msgs_LIBRARIES} ${amr_custom_interfaces_LIBRARIES} ${nav_msgs_LIBRARIES} ${tf2_msgs})
 target_include_directories(
   diff_drive_controller 
   PUBLIC 
@@ -62,6 +64,8 @@ target_include_directories(
   ${geometry_msgs_INCLUDE_DIRS} 
   ${nav_msgs_INCLUDE_DIRS} 
   ${tf2_msgs_INCLUDE_DIRS}
+  ${sensor_msgs_INCLUDE_DIRS}
+  ${amr_custom_interfaces_INCLUDE_DIRS}
 )
 
 install(
