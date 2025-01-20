@@ -16,6 +16,7 @@
 #include <queue>
 #include <mutex>
 #include <condition_variable>
+#include <thread>
 
 #include <iostream>
 
@@ -65,6 +66,7 @@ struct IoRequest
       std::optional<int> value;
       if (req.find("value") != req.end()) {
         value = req["value"].get<int>();
+        std::cout << "Val:" << value.value() << "\n";
       }
       
       data.requests.push_back({req["key"].get<int>(), type, value.value()});

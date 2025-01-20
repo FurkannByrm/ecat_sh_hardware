@@ -1,11 +1,10 @@
 #!/bin/bash
 set -Eeuo pipefail
 
-ec_status="$(/etc/init.d/ethercat status)"
-
-if [[ $ec_status != *"running"* ]]; then
-  /etc/init.d/ethercat status
-fi
+/etc/init.d/ethercat start
+#if [[ $ec_status != *"running"* ]]; then
+#  
+#fi
 
 
 #git_branch="$(git branch 2> /dev/null | grep '^*' | colrm 1 2 | xargs -I BRANCH echo -n ""

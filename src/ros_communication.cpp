@@ -136,21 +136,23 @@ void ros_communication(std::atomic<bool>& shutdown_requested, std::mutex& ros_sy
 
     hardwareInfoMsg.motor_driver_info.at(0).status = to_integral(rosData.device_states.at(0));
     hardwareInfoMsg.motor_driver_info.at(1).status = to_integral(rosData.device_states.at(1));
+    hardwareInfoMsg.motor_driver_info.at(0).current_position = rosData.joint_states.at(0).position;
+    hardwareInfoMsg.motor_driver_info.at(1).current_position = rosData.joint_states.at(1).position;
+    hardwareInfoMsg.motor_driver_info.at(0).current_velocity = rosData.joint_states.at(0).velocity;
+    hardwareInfoMsg.motor_driver_info.at(1).current_velocity = rosData.joint_states.at(1).velocity;
 
     jointStateMsg.position[0] = rosData.joint_states.at(0).position;
     jointStateMsg.position[1] = rosData.joint_states.at(1).position;
-
     jointStateMsg.velocity[0] = rosData.joint_states.at(0).velocity;
     jointStateMsg.velocity[1] = rosData.joint_states.at(1).velocity;
-
     jointStateMsg.header.stamp = controllerNode->get_clock()->now();
     
     toRosOdom(rosData.odometry, odomMsg);
 
     odomMsg.header.stamp = currentTime;
     odomPub->publish(odomMsg);
-
-    hardwareInfoPub->publish(hardwareInfoMsg);
+    jointStatePub->publish(jointStateMsg);
+    hardwareInfoPub->publish(hardwareInfoMsg);  
 
     previousUpdateTime = currentTime;
     rate.sleep();

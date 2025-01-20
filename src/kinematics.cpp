@@ -32,6 +32,7 @@ Odometry Odometry::update(double left_wheel_vel, double right_wheel_vel, const t
     const double oldHeading = heading;
     heading += angularVelBody * dt;
     x += linearVelToAngularVelRatio * (std::sin(heading) - std::sin(oldHeading));
+    std::cout << "X: " << x << std::endl;
     y += linearVelToAngularVelRatio * (std::cos(heading) - std::cos(oldHeading));
   }
 
@@ -40,8 +41,8 @@ Odometry Odometry::update(double left_wheel_vel, double right_wheel_vel, const t
   linearVelAccumulator(linearVelBody / dt);
   angularVelAccumulator(angularVelBody / dt);
 
-  //linearVel = boost::accumulators::rolling_mean(linearVelAccumulator);
-  //angularVel = boost::accumulators::rolling_mean(angularVelAccumulator);
+  linearVel = linearVelBody;
+  angularVel = angularVelBody;
 
   return *this;
 

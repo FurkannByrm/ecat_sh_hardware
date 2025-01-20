@@ -45,6 +45,7 @@ struct JointInfo
 struct Odometry
 {
 
+  
   using RollingMeanAccumulator = boost::accumulators::accumulator_set<double, boost::accumulators::stats<boost::accumulators::tag::rolling_mean>>;
   using RollingWindowSize = boost::accumulators::tag::rolling_window;
   
@@ -66,10 +67,10 @@ struct Odometry
       angularVel(0),
       x(0),
       y(0),
-      heading(0),
-      linearVelAccumulator(boost::accumulators::tag::rolling_window::window_size = 10),
-      angularVelAccumulator(boost::accumulators::tag::rolling_window::window_size = 10)
+      heading(0)
   {
+    linearVelAccumulator(boost::accumulators::tag::rolling_window::window_size = 10);
+    angularVelAccumulator(boost::accumulators::tag::rolling_window::window_size = 10);
   }
 
   Odometry(const Odometry& other)

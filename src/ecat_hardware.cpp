@@ -417,14 +417,14 @@ int main(int argc, char** argv)
   std::condition_variable ioServerCv;
   std::shared_ptr<ecat_sh_hardware::IoCommandQueue> ioCommandQueue = std::make_shared<ecat_sh_hardware::IoCommandQueue>();
 
-/*   std::thread ioServerThread(ecat_sh_hardware::io_tcp_server_func,
+  std::thread ioServerThread(ecat_sh_hardware::io_tcp_server_func,
     std::ref(runServer),
     std::ref(ioServerCv),
     ioCommandQueue,
     3255,
     4096
   );
- */
+
   shared_obj_info::EthercatDataObject rightWheelData;
   shared_obj_info::EthercatDataObject leftWheelData;
 
@@ -556,7 +556,8 @@ int main(int argc, char** argv)
     }
 
     {
-      std::unique_lock lk(ioCommandQueue->commandQueueMutex);
+      
+    std::unique_lock lk(ioCommandQueue->commandQueueMutex);
     while(!ioCommandQueue->commandQueue.empty())
     {
       
@@ -587,7 +588,7 @@ int main(int argc, char** argv)
 
   std::cout << "Shutting down EtherCAT hardware\n";
   runServer = false;
-  //ioServerThread.join();
+  ioServerThread.join();
 
   writeToSlave(domainProcessData, RightMotorEthercatDataOffsets.target_velocity, 0);
   writeToSlave(domainProcessData, LeftMotorEthercatDataOffsets.target_velocity, 0);

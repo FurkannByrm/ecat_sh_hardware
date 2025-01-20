@@ -3,6 +3,8 @@
 
 namespace ecat_sh_hardware {
 
+using namespace std::chrono_literals;
+
 void io_tcp_server_func(
   std::atomic<bool> &run_server,
   std::condition_variable &cv,
@@ -19,7 +21,7 @@ void io_tcp_server_func(
   sockaddr_in clientAddr;
   socklen_t addresLen = sizeof(clientAddr);
   
-  serverFd = socket(AF_INET, SOCK_STREAM, 0);
+  serverFd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
   if (serverFd == -1)
   {
     std::cout << "Failed to create socket" << std::endl;
@@ -48,20 +50,24 @@ void io_tcp_server_func(
   bool connected = false;
   while(run_server.load())
   {
-    std::cout << "Running server...\n";
+    std::this_thread::sleep_for(20ms);
     if(!connected)
     socketFd = accept(serverFd, (sockaddr*)&clientAddr, &addresLen);
+    if(socketFd == -1)
+    {
+      connected = false;
+      continue;
+    }
 
     if(socketFd < 0)
     {
       std::cout << "Failed to accept connection" << std::endl;
+      connected = false;
       return;
     }
     else{
       connected = true;
     }
-
-    
 
     if(connected){
     char messageBuffer[1024] = {0};
@@ -70,17 +76,21 @@ void io_tcp_server_func(
     // Error cases
     if(bytesRead == -1)
     {
-      std::cout << "Failed to read message" << std::endl;
+      //if(!connected)
+      //  close(socketFd);
+      continue;
     }
     else if(bytesRead == 0)
     {
-      std::cout << "Read EOF" << std::endl;
+      //if(!connected)
+      //  close(socketFd);
+      continue;
     }
-    std::cout << bytesRead << std::endl;
+    //std::cout << bytesRead << std::endl;
     // Deserialize message
     std::string reqStr = std::string(messageBuffer);
     
-    std::cout << std::hex << reqStr << "\n";
+    std::cout << reqStr << "\n";
     auto reqOpt = IoRequest::fromStr(reqStr);
     if(!reqOpt.has_value())
     {
