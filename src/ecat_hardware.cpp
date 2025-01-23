@@ -99,6 +99,90 @@ const ec_pdo_entry_reg_t domainRegistries[] = {
   {}
 };
 
+
+enum class SdoSetupError
+{
+  OK,
+  UNKNOWN,
+  UPLOAD_ERROR,
+  DOWNLOAD_ERROR
+};
+
+SdoSetupError setupDriverFor24Volts(ec_slave_config* slave_config_ptr)
+{
+  if(ecrt_slave_config_sdo32(slave_config_ptr, 0x2002, 0x19, 24000) < 0)
+  {
+    return SdoSetupError::DOWNLOAD_ERROR;
+  }
+
+  if(ecrt_slave_config_sdo32(slave_config_ptr, 0x2002, 0x14, 150) < 0)
+  {
+    return SdoSetupError::DOWNLOAD_ERROR;
+  }
+
+  if(ecrt_slave_config_sdo32(slave_config_ptr, 0x2002, 0x15, 244) < 0)
+  {
+    return SdoSetupError::DOWNLOAD_ERROR;
+  }
+
+  if(ecrt_slave_config_sdo16(slave_config_ptr, 0x2002, 0x12, 5) < 0)
+  {
+    return SdoSetupError::DOWNLOAD_ERROR;
+  }
+
+  if(ecrt_slave_config_sdo16(slave_config_ptr, 0x2002, 0x13, 243) < 0)
+  {
+    return SdoSetupError::DOWNLOAD_ERROR;
+  }
+
+  if(ecrt_slave_config_sdo32(slave_config_ptr, 0x6080, 0x0, 824) < 0)
+  {
+    return SdoSetupError::DOWNLOAD_ERROR;
+  }
+
+  if(ecrt_slave_config_sdo16(slave_config_ptr, 0x2003, 0x15, 270) < 0)
+  {
+    return SdoSetupError::DOWNLOAD_ERROR;
+  }
+
+  if(ecrt_slave_config_sdo16(slave_config_ptr, 0x2003, 0x2D, 752) < 0)
+  {
+    return SdoSetupError::DOWNLOAD_ERROR;
+  }
+
+  if(ecrt_slave_config_sdo32(slave_config_ptr, 0x2003, 0x18, 467) < 0)
+  {
+    return SdoSetupError::DOWNLOAD_ERROR;
+  }
+
+  if(ecrt_slave_config_sdo16(slave_config_ptr, 0x2003, 0x19, 21) < 0)
+  {
+    return SdoSetupError::DOWNLOAD_ERROR;
+  }
+
+  if(ecrt_slave_config_sdo32(slave_config_ptr, 0x2003, 0x16, 169) < 0)
+  {
+    return SdoSetupError::DOWNLOAD_ERROR;
+  }
+
+  if(ecrt_slave_config_sdo32(slave_config_ptr, 0x2003, 0x11, 44700) < 0)
+  {
+    return SdoSetupError::DOWNLOAD_ERROR;
+  }
+
+  if(ecrt_slave_config_sdo8(slave_config_ptr, 0x2003, 0x13, 4) < 0)
+  {
+    return SdoSetupError::DOWNLOAD_ERROR;
+  }
+
+  if(ecrt_slave_config_sdo32(slave_config_ptr, 0x6075, 0x00, 8000) < 0)
+  {
+    return SdoSetupError::DOWNLOAD_ERROR;
+  }
+
+  return SdoSetupError::OK;
+}
+
 /* struct IoChannelOffsets
 {
   uint channel1;
@@ -156,6 +240,8 @@ ec_pdo_info_t digital_input_pdos[] = {
 };
 
 ec_sync_info_t digital_input_syncs[] = { { 0, EC_DIR_INPUT, 16, digital_input_pdos + 0, EC_WD_DISABLE }, { 0xff } };
+
+
 
 constexpr auto DIGITAL_OUTPUT_START_POSITION = 4;
 constexpr auto DIGITAL_OUTPUT_ALIAS = 0;
@@ -314,6 +400,7 @@ int main(int argc, char** argv)
   {
     return 1;
   }
+  setupDriverFor24Volts(slaveConfigPtr);
 
   ecrt_slave_config_dc(slaveConfigPtr, 0x0700, 2000000, 0, 2000000, 0);
 
@@ -326,7 +413,7 @@ int main(int argc, char** argv)
   {
     return 1;
   }
-
+  setupDriverFor24Volts(slaveConfigPtr);
   ecrt_slave_config_dc(slaveConfigPtr, 0x0700, 2000000, 0, 2000000, 0);
 
   //slaveConfigPtr = ecrt_master_slave_config(masterPtr, 0, 2, DIGITAL_INPUT_VENDOR_ID, 0x044c2c52);
@@ -598,7 +685,6 @@ int main(int argc, char** argv)
 
   using namespace std::chrono_literals;
   std::this_thread::sleep_for(10ms);
-
   
 
   ecrt_release_master(masterPtr);
