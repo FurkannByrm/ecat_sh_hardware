@@ -400,7 +400,10 @@ int main(int argc, char** argv)
   {
     return 1;
   }
-  setupDriverFor24Volts(slaveConfigPtr);
+  if(setupDriverFor24Volts(slaveConfigPtr) != SdoSetupError::OK)
+  {
+    return 1;
+  }
 
   ecrt_slave_config_dc(slaveConfigPtr, 0x0700, 2000000, 0, 2000000, 0);
 
@@ -413,7 +416,10 @@ int main(int argc, char** argv)
   {
     return 1;
   }
-  setupDriverFor24Volts(slaveConfigPtr);
+  if(setupDriverFor24Volts(slaveConfigPtr) != SdoSetupError::OK)
+  {
+    return 1;
+  }
   ecrt_slave_config_dc(slaveConfigPtr, 0x0700, 2000000, 0, 2000000, 0);
 
   //slaveConfigPtr = ecrt_master_slave_config(masterPtr, 0, 2, DIGITAL_INPUT_VENDOR_ID, 0x044c2c52);

@@ -49,7 +49,8 @@ void toRosOdom(const Odometry& odom, nav_msgs::msg::Odometry& ros_odom)
 void ros_communication(std::atomic<bool>& shutdown_requested, std::mutex& ros_sync_mutex,
                        std::shared_ptr<VelocityCommand>& command_ptr, std::shared_ptr<RosData>& data)
 {
-  rclcpp::init(0, nullptr);
+  //rclcpp::init(0, nullptr);
+  rclcpp::init(0, nullptr, rclcpp::InitOptions(),rclcpp::SignalHandlerOptions::None);
 
   std::shared_ptr<rclcpp::Node> controllerNode = std::make_shared<rclcpp::Node>("diff_drive_controller_node");
 
@@ -76,7 +77,7 @@ void ros_communication(std::atomic<bool>& shutdown_requested, std::mutex& ros_sy
   jointStateMsg.velocity[1] = 0.0;
   jointStateMsg.header.frame_id = "base_link";
   
-
+  
   std::shared_ptr<rclcpp::Subscription<geometry_msgs::msg::TwistStamped>> velCommandSub =
       controllerNode->create_subscription<geometry_msgs::msg::TwistStamped>(
           "/cmd_vel", rclcpp::SystemDefaultsQoS(),
