@@ -29,7 +29,6 @@ void VelocityLimiter::limit(double& command, double dt, double current_value)
     
 
   const double possibleAcceleration = std::clamp(requestedAcc, min_acc * dt, max_acc * dt);
-  std::cout << "Possible accel: " << possibleAcceleration  << "Requested accel: " << requestedAcc << std::endl;
   command = prev_command + (possibleAcceleration * 1.0);
   // Limit velocity
   prev_command = command;
@@ -67,7 +66,11 @@ CIA402_State deriveState(uint16_t status_word)
   {
     return CIA402_State::FAULT_REACTION_ACTIVE;
   }
-  else if ((status_word & 0b01001111) == 0b00001000)
+  //else if ((status_word & 0b01101111) == 0b01101000)
+  //{
+  //  return CIA402_State::FAULT;
+  //}
+  else if((status_word) & (1<<(3)))
   {
     return CIA402_State::FAULT;
   }
@@ -82,6 +85,7 @@ void sigInHandler(int signal)
 
 uint16_t transitionToState(CIA402_State state, uint16_t control_word)
 {
+  static int resetFaultC = 0;
   switch (state)
   {
     case CIA402_State::START:
@@ -93,7 +97,7 @@ uint16_t transitionToState(CIA402_State state, uint16_t control_word)
     case CIA402_State::READY_TO_SWITCH_ON:
       return (control_word & 0b01110111) | 0b00000111;
     case CIA402_State::SWITCH_ON:
-      return (control_word & 0b01111111) | 0b00001111;
+      return (control_word & 0b01111111) | 0b00001101;
     case CIA402_State::OPERATION_ENABLED:
       return control_word;
     case CIA402_State::QUICK_STOP_ACTIVE:
@@ -101,7 +105,17 @@ uint16_t transitionToState(CIA402_State state, uint16_t control_word)
     case CIA402_State::FAULT_REACTION_ACTIVE:
       return control_word;
     case CIA402_State::FAULT:
-      return (control_word & 0b11111111) | 0b10000000;
+    {
+      if(resetFaultC == 10)
+      {
+        resetFaultC = 0;
+        return (control_word & 0b11111111) | 0b10000110;
+      } 
+      else{
+        resetFaultC += 1;
+        return (control_word & 0b11111111) | 0b00000110;
+      }
+    } 
     default:
       break;
   }
@@ -112,7 +126,7 @@ int main(int argc, char** argv)
 {
   std::expected<shm_handler::SharedMemoryHandler<shared_obj_info::EthercatDataObject, 2>, shm_handler::Error>
       sharedMemoryHandlerInit = shm_handler::SharedMemoryHandler<shared_obj_info::EthercatDataObject, 2>::create(
-          shared_obj_info::SHARED_MEMORY_SEG_NAME, shared_obj_info::ETHERCAT_DATA_SEM_NAME, shm_handler::Mode::OPEN);
+          shared_obj_info::SHARED_MEMORY_SEG_NAME, shared_obj_info::ETHERCAT_DATA_SEM_NAME, Mode::OPEN);
 
   if (!sharedMemoryHandlerInit.has_value())
   {
@@ -130,6 +144,9 @@ int main(int argc, char** argv)
 
   std::shared_ptr<VelocityCommand> velCommandPtr = std::make_shared<VelocityCommand>();
   std::shared_ptr<RosData> rosDataPtr = std::make_shared<RosData>();
+  rosDataPtr->device_states.resize(2);
+  rosDataPtr->joint_states.resize(2);
+
   std::mutex rosSyncMutex;
   std::atomic<bool> shutdownRequested = false;
 
@@ -140,11 +157,11 @@ int main(int argc, char** argv)
   linLimiter.max_vel = 0.45;
   linLimiter.min_vel = -0.45;
   linLimiter.max_acc = 0.225;
-  linLimiter.min_acc = -0.05;
+  linLimiter.min_acc = -0.225;
   angLimiter.max_vel = 1.0;
   angLimiter.min_vel = -1.0;
   angLimiter.max_acc = 0.5;
-  angLimiter.min_acc = 0.0;  
+  angLimiter.min_acc = -0.5;  
 
   std::thread rosThread(&ros_communication, std::ref(shutdownRequested), std::ref(rosSyncMutex),
                         std::ref(velCommandPtr), std::ref(rosDataPtr));
@@ -176,10 +193,9 @@ int main(int argc, char** argv)
       {
         
         uint16_t newControlWord = transitionToState(rightWheelCurrentState, rightWheelStateHandler.previousControlWord);
-        if((rightWheelShData.status_word & 0x0008) && !(rightWheelShData.status_word & 0x0007)) {
-          newControlWord = 0x0080;
-        }
-
+        //if((rightWheelShData.status_word & 0x0008) && !(rightWheelShData.status_word & 0x0007)) {
+        //  newControlWord = 0x0080;
+        //}
         
         rightWheelShData.control_word = newControlWord;
         rightWheelStateHandler.previousControlWord = newControlWord;
@@ -189,6 +205,7 @@ int main(int argc, char** argv)
       else
       {
         rightWheelStateHandler.isOperational = true;
+        rightWheelStateHandler.previousState = deriveState(rightWheelShData.status_word);
       }
 
       // dataPackage[1] := left wheel
@@ -198,9 +215,9 @@ int main(int argc, char** argv)
           leftWheelCurrentState != CIA402_State::OPERATION_ENABLED)
       {
         uint16_t newControlWord = transitionToState(leftWheelCurrentState, leftWheelStateHandler.previousControlWord);
-        if((leftWheelShData.status_word & 0x0008) && !(leftWheelShData.status_word & 0x0007)) {
-          newControlWord = 0x0080;
-        }
+        //if((leftWheelShData.status_word & 0x0008) && !(leftWheelShData.status_word & 0x0007)) {
+        //  newControlWord = 0x0080;
+        //}
         leftWheelShData.control_word = newControlWord;
         leftWheelStateHandler.previousControlWord = newControlWord;
         leftWheelStateHandler.previousState = leftWheelCurrentState;
@@ -210,30 +227,40 @@ int main(int argc, char** argv)
                leftWheelCurrentState == CIA402_State::OPERATION_ENABLED)
       {
         leftWheelStateHandler.isOperational = true;
+        leftWheelStateHandler.previousState = deriveState(leftWheelShData.status_word);
       }
 
-              /* odomFuture =
-                  std::async(std::launch::async, &Odometry::update, odomHandler,
-         motorVelToLinearVel_BHFF((double)rightWheelShData.current_velocity / 0.1), motorVelToLinearVel_BHFF((double)leftWheelShData.current_velocity / 0.1), currentTime);
- */
       bool driversEnabled = (rightWheelStateHandler.isOperational && leftWheelStateHandler.isOperational);
 
           rosSyncMutex.lock();
           VelocityCommand velCmd = *velCommandPtr;  
-          auto od = odomHandler.update(motorVelToLinearVel_BHFF((double)rightWheelShData.current_velocity / 0.1), motorVelToLinearVel_BHFF((double)leftWheelShData.current_velocity / 0.1), currentTime);
+          // Calculte odometry
+          double leftWheelLinearVel = motorVelToLinearVel_BHFF(((double)leftWheelShData.current_velocity / 0.1) * -1.0);
+          double rightWheelLinearVel = motorVelToLinearVel_BHFF((double)rightWheelShData.current_velocity / 0.1);
+
+          auto od = odomHandler.update(leftWheelLinearVel, rightWheelLinearVel, currentTime);
+          // Update ROS data
           rosDataPtr->odometry = od;
+          
+          rosDataPtr->device_states[0] = rightWheelStateHandler.previousState; 
+          rosDataPtr->device_states[1] = leftWheelStateHandler.previousState;
+          //std::cout << rosDataPtr->device_states[0] << " " << rosDataPtr->device_states[1] << std::endl;
+          
+          rosDataPtr->joint_states[0].position = rightWheelShData.current_position;
+          rosDataPtr->joint_states[1].position = leftWheelShData.current_position;
+
+          rosDataPtr->joint_states[0].velocity = leftWheelLinearVel;
+          rosDataPtr->joint_states[1].velocity = rightWheelLinearVel;
+
           rosSyncMutex.unlock();
 
       // If all slaves are operational, write commands:
       if (driversEnabled)
       {
-        // Get data from ROS
-      
-      std::cout << "Before limit: " << velCmd.linear << std::endl;
-      
+        // Get data from ROS      
       linLimiter.limit(velCmd.linear, 0.002);
       angLimiter.limit(velCmd.angular, 0.002);
-      std::cout << "After limit: " << velCmd.linear  << "ang:" << velCmd.angular << std::endl;
+      
       auto wheelVelocities = getWheelVelocityFromRobotCmd(
         velCmd.linear, 
         velCmd.angular

@@ -1,13 +1,13 @@
 [Unit]
 Description=
 After=network.target local-fs.target 
-Requires=ethercat.service
+#Requires=ethercat.service
 [Service]
 Type=simple
 Restart=no
 #RestartSec=1
 User=root
 EnvironmentFile=-/etc/sysconfig/ecathardware
-ExecStart=/home/hamal22/ecat_sh_hardware/service/ecat_hardware-start.sh
+ExecStart=/home/upxtreme/ecat_sh_hardware/service/ecat_hardware-start.sh
 [Install]
 WantedBy=multi-user.target

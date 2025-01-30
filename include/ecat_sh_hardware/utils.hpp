@@ -7,12 +7,30 @@
 #include <sys/time.h>
 #include <chrono>
 
+template <typename E>
+constexpr auto to_integral(E e) -> typename std::underlying_type<E>::type {
+  return static_cast<typename std::underlying_type<E>::type>(e);
+}
+
+enum class CIA402_State
+{
+  UNKNOWN_STATE = -1,
+  START = 0,
+  NOT_READY_TO_SWITCH_ON = 1,
+  SWITCH_ON_DISABLED = 2,
+  READY_TO_SWITCH_ON = 3,
+  SWITCH_ON = 4,
+  OPERATION_ENABLED = 5,
+  FAULT_REACTION_ACTIVE = 6,
+  FAULT = 7,
+  QUICK_STOP_ACTIVE = 8
+};
+
 namespace ecat_sh_hardware {
 
 #define DistributedClockHelper DistributedClockHelper_t
 
 constexpr auto NANOSEC_PER_SEC = 1000000000L;
-
 
 struct DistributedClockHelper_t
 {
