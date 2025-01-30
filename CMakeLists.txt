@@ -3,7 +3,7 @@ project(ecat_sh_hardware VERSION 0.1 LANGUAGES C CXX)
 
 set(CXX_STANDARD 23)
 
-set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} /home/upxtreme/ethercat/include/ /usr/local /opt/ros/humble/include/)
+set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} /home/upxtreme/ethercat/include/ /usr/local/ /opt/ros/humble/include/)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
   add_compile_options(-Wall -Wextra  -Werror=return-type)
@@ -36,8 +36,8 @@ add_executable(
   src/io_tcp_server.cpp
   src/utils.cpp
 )
-target_include_directories(diff_drive_hardware PUBLIC include/ ${ipc_handlers_INCLUDE_DIRS} ${timespec_chrono_conversions_INCLUDE_DIRS}/timespec_chrono_conversions)
-target_link_libraries(diff_drive_hardware ethercat rt Threads::Threads ${ipc_handlers_LIBRARIES})
+target_include_directories(diff_drive_hardware PUBLIC include/ /home/upxtreme/ethercat/include/ ${ipc_handlers_INCLUDE_DIRS} ${timespec_chrono_conversions_INCLUDE_DIRS}/timespec_chrono_conversions)
+target_link_libraries(diff_drive_hardware /usr/local/etherlab/lib/libethercat.so rt Threads::Threads ${ipc_handlers_LIBRARIES})
 
 add_executable(
   diff_drive_controller

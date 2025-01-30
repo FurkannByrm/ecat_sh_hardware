@@ -51,8 +51,6 @@ void ros_communication(std::atomic<bool>& shutdown_requested, std::mutex& ros_sy
 {
   rclcpp::init(0, nullptr, rclcpp::InitOptions(),rclcpp::SignalHandlerOptions::None);
   //rclcpp::init(0, nullptr);
-  rclcpp::init(0, nullptr, rclcpp::InitOptions(),rclcpp::SignalHandlerOptions::None);
-
   std::shared_ptr<rclcpp::Node> controllerNode = std::make_shared<rclcpp::Node>("diff_drive_controller_node");
 
   std::shared_ptr<VelocityCommand> velCommandPtr = command_ptr;
@@ -108,7 +106,7 @@ void ros_communication(std::atomic<bool>& shutdown_requested, std::mutex& ros_sy
 
   rclcpp::executors::SingleThreadedExecutor exec;
   exec.add_node(controllerNode);
-  rclcpp::Rate rate(250.0);
+  rclcpp::Rate rate(500.0);
 
   rclcpp::Time previousUpdateTime = controllerNode->get_clock()->now();
   const rclcpp::Duration velocityCommandTimeout = rclcpp::Duration::from_seconds(0.1);
@@ -121,17 +119,28 @@ void ros_communication(std::atomic<bool>& shutdown_requested, std::mutex& ros_sy
     const auto timeElapsedSinceLatestUpdate = currentTime - previousUpdateTime;
     if (!velCmdQueue.empty())
     {
+      auto timestamp = velCmdQueue.front().header.stamp;
 
-      if ((timeElapsedSinceLatestUpdate <= velocityCommandTimeout))
+      if (((currentTime - timestamp) <= velocityCommandTimeout))
       {
-        auto currCommand = velCmdQueue.front().twist;
-        *command_ptr = { currCommand.linear.x, currCommand.angular.z };  
-      }
-      auto currCommand = velCmdQueue.front().twist;
         
-      *command_ptr = { currCommand.linear.x, currCommand.angular.z };  
+        //auto currCommand = velCmdQueue.front().twist;
+        //*command_ptr = { 0.0, 0.0 };
+        auto currCommand = velCmdQueue.front().twist;
+        *command_ptr = { currCommand.linear.x, currCommand.angular.z };    
+        
+      }
+      else
+      {
+        *command_ptr = { 0.0, 0.0 };
+        
+      }
       velCmdQueue.pop();
     }
+/*     else
+    {
+      *command_ptr = { 0.0, 0.0 };
+    } */
 
     rosData = *data;
     ros_sync_mutex.unlock();
@@ -142,6 +151,7 @@ void ros_communication(std::atomic<bool>& shutdown_requested, std::mutex& ros_sy
     hardwareInfoMsg.motor_driver_info.at(1).current_position = rosData.joint_states.at(1).position;
     hardwareInfoMsg.motor_driver_info.at(0).current_velocity = rosData.joint_states.at(0).velocity;
     hardwareInfoMsg.motor_driver_info.at(1).current_velocity = rosData.joint_states.at(1).velocity;
+    
 
     jointStateMsg.position[0] = rosData.joint_states.at(0).position;
     jointStateMsg.position[1] = rosData.joint_states.at(1).position;

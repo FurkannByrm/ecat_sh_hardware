@@ -537,6 +537,9 @@ int main(int argc, char** argv)
   clock_gettime(CLOCK_MONOTONIC, &startTime);
   bool bit_test_counter = true;
   int dig_out_count = 0;
+  bool initialRead = true;
+  int32_t rightInitialPosition = 0;
+  int32_t leftInitialPosition = 0;
   while (runHardwareLoop)
   {
     // DC sync
@@ -598,13 +601,20 @@ int main(int argc, char** argv)
       leftWheelData.current_velocity = leftMotorCurrentVelocity.value();
     }
 
+    if(initialRead)
+    {
+      rightInitialPosition = rightWheelData.current_position;
+      leftInitialPosition = leftWheelData.current_position;
+      initialRead = false;
+    }
+
     // If we get a lock on the semaphore, read/write from/to EtherCAT:
 
     if (sharedMemoryHandler.tryLock())
     {
       auto& rightWheelShData = sharedMemoryHandler.getDataPtr()[0];
       rightWheelShData.status_word = rightWheelData.status_word;
-      rightWheelShData.current_position = rightWheelData.current_position;
+      rightWheelShData.current_position = rightWheelData.current_position - rightInitialPosition;
       rightWheelShData.current_velocity = rightWheelData.current_velocity;
 
       rightWheelData.control_word = rightWheelShData.control_word;
@@ -614,7 +624,7 @@ int main(int argc, char** argv)
 
       auto& leftWheelShData = sharedMemoryHandler.getDataPtr()[1];
       leftWheelShData.status_word = leftWheelData.status_word;
-      leftWheelShData.current_position = leftWheelData.current_position;
+      leftWheelShData.current_position = leftWheelData.current_position - leftInitialPosition;
       leftWheelShData.current_velocity = leftWheelData.current_velocity;
       // leftWheelData.status_word = leftWheelShData.status_word;
       // leftWheelData.current_position = leftWheelShData.current_position;

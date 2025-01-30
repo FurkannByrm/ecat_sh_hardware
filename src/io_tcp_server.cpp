@@ -107,6 +107,7 @@ void io_tcp_server_func(
     std::unique_lock lk(queue->commandQueueMutex);
     cv.wait(lk, [&queue]{return queue->commandQueue.empty();});
     }
+    
     //
     //std::vector<IoCommandQueue::Response> responses;
     //{

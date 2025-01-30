@@ -31,9 +31,8 @@ void VelocityLimiter::limit(double& command, double dt, double current_value)
   const double possibleAcceleration = std::clamp(requestedAcc, min_acc * dt, max_acc * dt);
   command = prev_command + (possibleAcceleration * 1.0);
   // Limit velocity
-  prev_command = command;
   command = std::clamp(command, min_vel, max_vel);
-  
+  prev_command = command;
 }
 
 CIA402_State deriveState(uint16_t status_word)
@@ -277,10 +276,9 @@ int main(int argc, char** argv)
         leftWheelShData.target_velocity = 0;
       }
       sharedMemoryHandler.unlock();
-    }
-    
-    
+    }    
     std::this_thread::sleep_for(2ms);
+    
   }
   shutdownRequested = true;
 }
