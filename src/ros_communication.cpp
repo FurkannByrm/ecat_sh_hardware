@@ -49,6 +49,7 @@ void toRosOdom(const Odometry& odom, nav_msgs::msg::Odometry& ros_odom)
 void ros_communication(std::atomic<bool>& shutdown_requested, std::mutex& ros_sync_mutex,
                        std::shared_ptr<VelocityCommand>& command_ptr, std::shared_ptr<RosData>& data)
 {
+  rclcpp::init(0, nullptr, rclcpp::InitOptions(),rclcpp::SignalHandlerOptions::None);
   //rclcpp::init(0, nullptr);
   rclcpp::init(0, nullptr, rclcpp::InitOptions(),rclcpp::SignalHandlerOptions::None);
 
@@ -161,6 +162,9 @@ void ros_communication(std::atomic<bool>& shutdown_requested, std::mutex& ros_sy
 
 
   cleanupRosMembers();
+
+  using namespace std::chrono_literals;
+  std::this_thread::sleep_for(50ms);
 
   rclcpp::shutdown();
   

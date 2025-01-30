@@ -30,10 +30,6 @@ find_package(amr_custom_interfaces REQUIRED)
 find_package(ipc_handlers REQUIRED)
 find_package(timespec_chrono_conversions REQUIRED)
 
-
-message(ipc_handlers_INCLUDE_DIRS="${IPC_HANDLERS_INCLUDE_DIRS}")
-
-
 add_executable(
 	diff_drive_hardware
 	src/ecat_hardware.cpp

@@ -29,7 +29,6 @@ void VelocityLimiter::limit(double& command, double dt, double current_value)
     
 
   const double possibleAcceleration = std::clamp(requestedAcc, min_acc * dt, max_acc * dt);
-  std::cout << "Possible accel: " << possibleAcceleration  << "Requested accel: " << requestedAcc << std::endl;
   command = prev_command + (possibleAcceleration * 1.0);
   // Limit velocity
   prev_command = command;

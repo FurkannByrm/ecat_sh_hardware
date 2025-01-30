@@ -1,5 +1,4 @@
 #!/bin/bash
-set -Eeo pipefail
 
 
 
@@ -30,7 +29,7 @@ DIFF_DRIVE_CONTROLLER="${HARDWARE_EXEC_PATH}/diff_drive_controller"
 if [ -x "$DIFF_DRIVE_CONTROLLER" ]; then
   # Execute the DIFF_DRIVE_CONTROLLER file
   echo "Starting controller"
-  ./${DIFF_DRIVE_CONTROLLER}
+  .${DIFF_DRIVE_CONTROLLER}
 else
   echo "Error: $DIFF_DRIVE_CONTROLLER not found or not executable."
   exit 1
