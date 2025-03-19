@@ -19,14 +19,16 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(tf2 REQUIRED COMPONENTS LinearMath)
 find_package(tf2_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(rosidl_typesupport_cpp REQUIRED)
 find_package(rosidl_default_runtime REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
 find_package(rcl_interfaces REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(amr_custom_interfaces REQUIRED)
-
+find_package(nlohmann_json REQUIRED)
 find_package(ipc_handlers REQUIRED)
 find_package(timespec_chrono_conversions REQUIRED)
 
@@ -44,8 +46,9 @@ add_executable(
   src/controller.cpp
   src/kinematics.cpp
   src/ros_communication.cpp
+  src/bms_uart.cpp
 )
-target_link_libraries(diff_drive_controller rt Threads::Threads ${ipc_handlers_LIBRARIES} ${rclcpp_LIBRARIES} ${rcl_interfaces_LIBRARIES} ${rosidl_typesupport_cpp_LIBRARIES} ${rosidl_default_runtime_LIBRARIES} ${tf2_LIBRARIES} ${geometry_msgs} ${sensor_msgs_LIBRARIES} ${amr_custom_interfaces_LIBRARIES} ${nav_msgs_LIBRARIES} ${tf2_msgs})
+target_link_libraries(diff_drive_controller rt Threads::Threads ${ipc_handlers_LIBRARIES} ${rclcpp_LIBRARIES} ${rcl_interfaces_LIBRARIES} ${rosidl_typesupport_cpp_LIBRARIES} ${rosidl_default_runtime_LIBRARIES} ${tf2_LIBRARIES} ${geometry_msgs} ${sensor_msgs_LIBRARIES} ${amr_custom_interfaces_LIBRARIES} ${nav_msgs_LIBRARIES} ${tf2_msgs} ${tf2_ros} tf2_ros::tf2_ros)
 target_include_directories(
   diff_drive_controller 
   PUBLIC 
@@ -59,6 +62,7 @@ target_include_directories(
   ${geometry_msgs_INCLUDE_DIRS} 
   ${nav_msgs_INCLUDE_DIRS} 
   ${tf2_msgs_INCLUDE_DIRS}
+  ${tf2_ros_INCLUDE_DIRS}
   ${sensor_msgs_INCLUDE_DIRS}
   ${amr_custom_interfaces_INCLUDE_DIRS}
 )
